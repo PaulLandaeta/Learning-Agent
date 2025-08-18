@@ -3,17 +3,17 @@ import { Card, Divider, Typography, Avatar, Layout, FloatButton, Modal, Input, B
 import { UserOutlined, MessageOutlined, SendOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
-// PALETA DE COLORES - Usando solo los colores especificados
+
 const COLORS = {
-  deepNavy: "#1A2A80",       // Azul oscuro principal
-  royalPurple: "#3B38A0",     // Azul medio
-  softPeriwinkle: "#7A85C1", // Azul claro
-  paleLavender: "#B2B0E8",    // Azul pastel
-  pureWhite: "#FFFFFF",       // Blanco puro
-  darkCharcoal: "#222222"     // Texto principal
+  deepNavy: "#1A2A80",       
+  royalPurple: "#3B38A0",     
+  softPeriwinkle: "#7A85C1", 
+  paleLavender: "#B2B0E8",    
+  pureWhite: "#FFFFFF",       
+  darkCharcoal: "#222222"     
 };
 
-// ESTILOS PRINCIPALES
+
 const layoutStyle: React.CSSProperties = {
   minHeight: "100vh",
   background: COLORS.pureWhite,
@@ -31,7 +31,7 @@ const siderStyle: React.CSSProperties = {
 };
 
 export function StudentProfile() {
-  // Estados para controlar la interfaz
+  
   const [activeSubject, setActiveSubject] = useState("Matemáticas");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -39,29 +39,29 @@ export function StudentProfile() {
   const [inputValue, setInputValue] = useState("");
   const chatBodyRef = useRef<HTMLDivElement>(null);
 
-  // Datos del estudiante
+  
   const studentData = {
     name: "Juan Pérez",
     role: "Estudiante",
     subjects: ["Matemáticas", "Física", "Programación", "Historia"],
     courses: [
       { 
-        id: "examenes", 
+        id: "exam", 
         title: (subject: string) => `Exámenes de ${subject}`,
         description: "Demuestra tus conocimientos en esta materia" 
       },
       { 
-        id: "entrevistas", 
+        id: "interview", 
         title: "Entrevistas Técnicas", 
         description: "Prepárate para tu próximo desafío profesional" 
       }
     ]
   };
 
-  // Función para abrir el chat con animación de "escribiendo" antes del mensaje
+  
   const handleChatClick = () => {
     setIsChatOpen(true);
-    setMessages([]); // Limpiar mensajes para asegurar que la animación ocurra primero
+    setMessages([]); 
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
@@ -72,7 +72,7 @@ export function StudentProfile() {
     }, 1800);
   };
 
-  // Función para enviar mensajes en el chat
+  
   const handleSendMessage = () => {
     if (inputValue.trim()) {
       const newMessage = { sender: "user", text: inputValue.trim() };
@@ -93,7 +93,7 @@ export function StudentProfile() {
     }
   };
 
-  // Desplazar automáticamente al mensaje más reciente
+  
   useEffect(() => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
@@ -102,9 +102,9 @@ export function StudentProfile() {
 
   return (
     <Layout style={layoutStyle}>
-      {/* --- SIDEBAR --- */}
+      
       <Layout.Sider width={280} style={siderStyle}>
-        {/* Perfil del estudiante */}
+        
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <Avatar
             size={86}
@@ -146,7 +146,7 @@ export function StudentProfile() {
           margin: "24px 0" 
         }} />
 
-        {/* Listado de materias */}
+        
         <Typography.Title
           level={4}
           style={{
@@ -185,14 +185,14 @@ export function StudentProfile() {
         </div>
       </Layout.Sider>
 
-      {/* --- CONTENIDO PRINCIPAL --- */}
+      
       <Layout.Content style={{ 
         flex: 1, 
         padding: "40px",
         overflowY: "auto"
       }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          {/* Título principal cambiado a la materia activa */}
+          
           <Typography.Title
             level={1}
             style={{
@@ -205,7 +205,7 @@ export function StudentProfile() {
             {activeSubject}
           </Typography.Title>
 
-          {/* Tarjetas de cursos */}
+          
           <div style={{ 
             display: "grid", 
             gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", 
@@ -291,7 +291,7 @@ export function StudentProfile() {
           </div>
         </div>
 
-        {/* Botón de chat flotante con animación */}
+        
         <div className="float-button-animation" style={{ position: "fixed", right: "40px", bottom: "40px", zIndex: 100 }}>
           <FloatButton
             icon={<MessageOutlined style={{ fontSize: "20px" }} />}
@@ -307,14 +307,14 @@ export function StudentProfile() {
         </div>
       </Layout.Content>
 
-      {/* --- MODAL DE CHAT (MÁS ANCHO Y RESPONSIVO) --- */}
+      
       <Modal
         title={null}
         open={isChatOpen}
         onCancel={() => setIsChatOpen(false)}
         footer={null}
-        width="90vw" // Modal responsivo con ancho relativo
-        style={{ top: "40px", maxWidth: "500px" }} // Limite máximo y centrado
+        width="90vw" 
+        style={{ top: "40px", maxWidth: "500px" }}
         closable={false}
         bodyStyle={{ padding: 0, borderRadius: "20px" }}
       >
@@ -328,7 +328,7 @@ export function StudentProfile() {
           overflow: "hidden",
           animation: "scaleIn 0.3s ease-out"
         }}>
-          {/* Encabezado del chat */}
+          
           <div style={{
             background: `linear-gradient(135deg, ${COLORS.deepNavy} 0%, ${COLORS.royalPurple} 100%)`,
             padding: "24px",
@@ -343,7 +343,7 @@ export function StudentProfile() {
                 fontSize: "20px"
               }}
             >
-              Asistente AWS
+              Asistente 
             </Typography.Title>
             <Typography.Text
               style={{
@@ -357,7 +357,7 @@ export function StudentProfile() {
             </Typography.Text>
           </div>
 
-          {/* Cuerpo del chat */}
+          
           <div 
             ref={chatBodyRef}
             style={{ 
@@ -380,7 +380,7 @@ export function StudentProfile() {
                   borderRadius: message.sender === 'user' ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
                   marginLeft: message.sender === 'user' ? "auto" : "0",
                   marginRight: message.sender === 'user' ? "0" : "auto",
-                  maxWidth: "80%", // Asegura que las burbujas sean responsivas
+                  maxWidth: "80%", 
                   boxShadow: message.sender === 'user' 
                     ? "0 4px 12px rgba(58, 56, 160, 0.15)" 
                     : "0 4px 12px rgba(0, 0, 0, 0.05)",
@@ -388,7 +388,7 @@ export function StudentProfile() {
                   animationDelay: `${index * 0.05}s`,
                   opacity: 0,
                   animationFillMode: "forwards",
-                  wordBreak: "break-word" // Evita desbordamiento de texto largo
+                  wordBreak: "break-word" 
                 }}
               >
                 {message.text}
@@ -424,7 +424,7 @@ export function StudentProfile() {
             )}
           </div>
 
-          {/* Área de entrada de mensajes */}
+          
           <div style={{ 
             padding: "16px 24px", 
             background: COLORS.pureWhite,
@@ -473,16 +473,16 @@ export function StudentProfile() {
         </div>
       </Modal>
 
-      {/* --- ANIMACIONES CSS --- */}
+      
       <style>
         {`
-          /* Animación para materias al hacer hover */
+          
           .subject-hover:hover {
             background: #3B38A033 !important;
             transform: translateX(4px) !important;
           }
           
-          /* Animación para tarjetas */
+          
           .card-hover:hover {
             transform: translateY(-8px);
             box-shadow: 0 16px 32px rgba(58, 56, 160, 0.2) !important;
@@ -498,27 +498,27 @@ export function StudentProfile() {
             background: linear-gradient(90deg, ${COLORS.softPeriwinkle} 0%, ${COLORS.royalPurple} 100%);
           }
           
-          /* Animación para botón flotante */
+          
           .float-button-animation {
             animation: float 3s ease-in-out infinite;
           }
           
-          /* Animación para avatar */
+          
           .avatar-hover:hover {
             transform: scale(1.05);
           }
           
-          /* Animación para input */
+         
           .input-hover:hover {
             box-shadow: 0 0 0 2px ${COLORS.paleLavender};
           }
           
-          /* Animación para botón de enviar */
+          
           .button-hover:hover button {
             transform: scale(1.1);
           }
           
-          /* Puntos de typing */
+         
           .typing-dot {
             display: inline-block;
             width: 6px;
@@ -530,7 +530,7 @@ export function StudentProfile() {
             animation: pulse 1.5s infinite;
           }
           
-          /* Keyframes para animaciones */
+          
           @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
@@ -570,7 +570,7 @@ export function StudentProfile() {
             }
           }
 
-          /* Media queries para responsividad */
+          
           @media (max-width: 768px) {
             .ant-modal {
               max-width: 90vw !important;
