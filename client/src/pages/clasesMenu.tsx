@@ -14,24 +14,24 @@ export function ClassMenu() {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
-  const goToReforzamiento = () => {
-    navigate('/reforzamiento');
+  const goToReinforcement = () => {
+    navigate('/reinforcement');
   };
 
-  // 1) Lista base segura
+  
   const clasesSafe = useMemo<Clase[]>(
     () => (Array.isArray(clases) ? clases : []),
     [clases]
   );
 
-  // 2) Filtrado derivado (sin useEffect)
+  
   const filteredClases = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return clasesSafe;
     return clasesSafe.filter((cl) => (cl.Name ?? "").toLowerCase().includes(term));
   }, [clasesSafe, searchTerm]);
 
-  // 3) Actuales / Pasados derivados
+  
   const { cursosActuales, cursosPasados } = useMemo(() => {
     const now = new Date();
     const byEndDesc = (a: Clase, b: Clase) =>
@@ -94,7 +94,7 @@ export function ClassMenu() {
           />
         </Space>
         <Button type="primary" onClick={() => setModalOpen(true)}>Añadir</Button>
-        <Button type="primary" onClick={goToReforzamiento}>page4</Button>
+        <Button type="primary" onClick={goToReinforcement}>page4</Button>
       </div>
 
       <h1>Cursos Actuales</h1>
