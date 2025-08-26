@@ -124,12 +124,20 @@
 }
 
 .course-card {
-  background: var(--pure-white);
+  background: var(--royal-purple);
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   border: none;
   overflow: hidden;
   transition: all 0.4s ease;
+}
+
+.card-hover {
+  position: relative;
+  overflow: hidden;
+  background: var(--deep-navy);
+  border-radius: 12px;
+  transition: transform 0.3s ease;
 }
 
 .card-hover:hover {
@@ -146,10 +154,12 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  margin: 0;
 }
 
 .card-glow {
   position: absolute;
+    inset: 0;
   top: 0;
   left: 0;
   right: 0;

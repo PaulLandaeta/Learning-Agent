@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Divider, Typography, Avatar, Layout, FloatButton, Modal, Input, Button } from "antd";
-import { UserOutlined, MessageOutlined, SendOutlined } from "@ant-design/icons";
+import { Card, Typography, Layout, FloatButton, Modal, Input, Button } from "antd";
+import { MessageOutlined, SendOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { getResponse } from "../api/api";
 import "./reinforcement.css";
@@ -19,12 +19,10 @@ export function StudentProfile() {
       {
         id: "exam",
         title: (subject: string) => `Exámenes de ${subject}`,
-        description: "Demuestra tus conocimientos en esta materia"
       },
       {
         id: "interview",
         title: "Entrevistas Técnicas",
-        description: "Prepárate para tu próximo desafío profesional"
       }
     ]
   };
@@ -87,7 +85,6 @@ export function StudentProfile() {
                   <Card
                     hoverable
                     className="course-card"
-                    bodyStyle={{ padding: "28px", background: "#F9FAFF" }}
                   >
                     <div className="card-header">
                       <div className="card-glow" />
@@ -96,11 +93,7 @@ export function StudentProfile() {
                           ? course.title(activeSubject)
                           : course.title}
                       </Typography.Title>
-                    </div>
-                    <Typography.Text className="card-description">
-                      {course.description}
-                    </Typography.Text>
-                    <div className="card-line" />
+                    </div>                   
                   </Card>
                 </div>
               </Link>
