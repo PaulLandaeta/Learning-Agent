@@ -4,6 +4,7 @@ import { MessageOutlined, SendOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { getResponse } from "../api/api";
 import "./reinforcement.css";
+
 const MIN_CHARACTERS = 1;
 
 export function StudentProfile() {
@@ -63,7 +64,6 @@ export function StudentProfile() {
         setIsTyping(false);
       }
     } else {
-      // Opcional: mostrar un mensaje de error al usuario
       console.warn(`El mensaje debe tener al menos ${MIN_CHARACTERS} caracteres.`);
     }
   };
@@ -78,24 +78,23 @@ export function StudentProfile() {
     <Layout className="layout">
       <Layout.Content className="content">
         <div className="content-container">
-          <div className="courses-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 mx-auto max-w-7xl">
             {studentData.courses.map((course) => (
-              <Link to={`/${course.id}`} key={course.id} className="card-link">
-                <div className="card-hover">
-                  <Card
-                    hoverable
-                    className="course-card"
-                  >
-                    <div className="card-header">
-                      <div className="card-glow" />
-                      <Typography.Title level={3} className="card-title">
-                        {typeof course.title === 'function'
-                          ? course.title(activeSubject)
-                          : course.title}
-                      </Typography.Title>
-                    </div>                   
-                  </Card>
-                </div>
+              <Link to={`/${course.id}`} key={course.id}>
+                <Card
+                  hoverable
+                  // Clases de Tailwind para un fondo blanco con sombreado
+                  className="w-full h-52 overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl relative"
+                >
+                  {/* Eliminamos el div con el degradado de color */}
+                  <div className="relative z-10 flex flex-col justify-end items-center h-full p-6 text-center">
+                    <Typography.Title level={3} className="text-gray-800 drop-shadow-sm text-2xl">
+                      {typeof course.title === 'function'
+                        ? course.title(activeSubject)
+                        : course.title}
+                    </Typography.Title>
+                  </div>
+                </Card>
               </Link>
             ))}
           </div>
