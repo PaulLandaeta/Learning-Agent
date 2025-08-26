@@ -8,6 +8,7 @@ import "./reinforcement.css";
 const MIN_CHARACTERS = 1;
 
 export function StudentProfile() {
+  const [activeSubject, setActiveSubject] = useState("Matemáticas");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
@@ -85,9 +86,9 @@ export function StudentProfile() {
                   // Clases de Tailwind para un fondo blanco con sombreado
                   className="w-full h-52 overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl relative"
                 >
-                  {/* Eliminamos el div con el degradado de color */}
                   <div className="relative z-10 flex flex-col justify-end items-center h-full p-6 text-center">
-                    <Typography.Title level={3} className="text-gray-800 drop-shadow-sm text-2xl">
+                    {/* Corrección: Cambiamos text-gray-800 drop-shadow-sm por text-gray-800 sin sombra */}
+                    <Typography.Title level={3} className="text-gray-800 text-2xl font-bold">
                       {typeof course.title === 'function'
                         ? course.title(activeSubject)
                         : course.title}
