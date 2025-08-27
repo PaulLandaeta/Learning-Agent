@@ -83,11 +83,9 @@ export function StudentProfile() {
               <Link to={`/${course.id}`} key={course.id}>
                 <Card
                   hoverable
-                  // Clases de Tailwind para un fondo blanco con sombreado
                   className="w-full h-52 overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl relative"
                 >
                   <div className="relative z-10 flex flex-col justify-end items-center h-full p-6 text-center">
-                    {/* Corrección: Cambiamos text-gray-800 drop-shadow-sm por text-gray-800 sin sombra */}
                     <Typography.Title level={3} className="text-gray-800 text-2xl font-bold">
                       {typeof course.title === 'function'
                         ? course.title(activeSubject)
@@ -138,12 +136,14 @@ export function StudentProfile() {
               </div>
             ))}
             {isTyping && (
-              <div className="typing-indicator">
-                <div className="typing-text">
-                  Escribiendo
-                  <span className="typing-dot" style={{ animationDelay: "0s" }}></span>
-                  <span className="typing-dot" style={{ animationDelay: "0.2s" }}></span>
-                  <span className="typing-dot" style={{ animationDelay: "0.4s" }}></span>
+              <div className="chat-message bot">
+                <div className="typing-indicator">
+                  <div className="typing-text">
+                    Escribiendo
+                    <span className="typing-dot" style={{ animationDelay: "0s" }}></span>
+                    <span className="typing-dot" style={{ animationDelay: "0.2s" }}></span>
+                    <span className="typing-dot" style={{ animationDelay: "0.4s" }}></span>
+                  </div>
                 </div>
               </div>
             )}
