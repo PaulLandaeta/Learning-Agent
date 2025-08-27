@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Divider, Typography, Avatar, Layout, FloatButton, Modal, Input, Button } from "antd";
-import { UserOutlined, MessageOutlined, SendOutlined } from "@ant-design/icons";
+import { Card, Typography, Layout, FloatButton, Modal, Input, Button } from "antd";
+import { MessageOutlined, SendOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { getResponse } from "../api/api";
 import "./reinforcement.css";
+
 const MIN_CHARACTERS = 1;
 
 export function StudentProfile() {
@@ -19,12 +20,10 @@ export function StudentProfile() {
       {
         id: "exam",
         title: (subject: string) => `Exámenes de ${subject}`,
-        description: "Demuestra tus conocimientos en esta materia"
       },
       {
         id: "interview",
         title: "Entrevistas Técnicas",
-        description: "Prepárate para tu próximo desafío profesional"
       }
     ]
   };
@@ -65,7 +64,6 @@ export function StudentProfile() {
         setIsTyping(false);
       }
     } else {
-      // Opcional: mostrar un mensaje de error al usuario
       console.warn(`El mensaje debe tener al menos ${MIN_CHARACTERS} caracteres.`);
     }
   };
@@ -80,29 +78,21 @@ export function StudentProfile() {
     <Layout className="layout">
       <Layout.Content className="content">
         <div className="content-container">
-          <div className="courses-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 mx-auto max-w-7xl">
             {studentData.courses.map((course) => (
-              <Link to={`/${course.id}`} key={course.id} className="card-link">
-                <div className="card-hover">
-                  <Card
-                    hoverable
-                    className="course-card"
-                    bodyStyle={{ padding: "28px", background: "#F9FAFF" }}
-                  >
-                    <div className="card-header">
-                      <div className="card-glow" />
-                      <Typography.Title level={3} className="card-title">
-                        {typeof course.title === 'function'
-                          ? course.title(activeSubject)
-                          : course.title}
-                      </Typography.Title>
-                    </div>
-                    <Typography.Text className="card-description">
-                      {course.description}
-                    </Typography.Text>
-                    <div className="card-line" />
-                  </Card>
-                </div>
+              <Link to={`/${course.id}`} key={course.id}>
+                <Card
+                  hoverable
+                  className="w-full h-52 overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl relative"
+                >
+                  <div className="relative z-10 flex flex-col justify-end items-center h-full p-6 text-center">
+                    <Typography.Title level={3} className="text-gray-800 text-2xl font-bold">
+                      {typeof course.title === 'function'
+                        ? course.title(activeSubject)
+                        : course.title}
+                    </Typography.Title>
+                  </div>
+                </Card>
               </Link>
             ))}
           </div>
@@ -146,12 +136,14 @@ export function StudentProfile() {
               </div>
             ))}
             {isTyping && (
-              <div className="typing-indicator">
-                <div className="typing-text">
-                  Escribiendo
-                  <span className="typing-dot" style={{ animationDelay: "0s" }}></span>
-                  <span className="typing-dot" style={{ animationDelay: "0.2s" }}></span>
-                  <span className="typing-dot" style={{ animationDelay: "0.4s" }}></span>
+              <div className="chat-message bot">
+                <div className="typing-indicator">
+                  <div className="typing-text">
+                    Escribiendo
+                    <span className="typing-dot" style={{ animationDelay: "0s" }}></span>
+                    <span className="typing-dot" style={{ animationDelay: "0.2s" }}></span>
+                    <span className="typing-dot" style={{ animationDelay: "0.4s" }}></span>
+                  </div>
                 </div>
               </div>
             )}
