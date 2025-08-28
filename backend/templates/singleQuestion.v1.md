@@ -13,3 +13,4 @@ Output format: JSON
 }
 
 Whenever I ask you something, respond **only once** in JSON following this format.
+Answer in spanish.
