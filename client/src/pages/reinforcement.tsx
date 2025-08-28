@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, Divider, Typography, Avatar, Layout, FloatButton, Modal, Input, Button } from "antd";
-import { UserOutlined, MessageOutlined, SendOutlined } from "@ant-design/icons";
+import { useState, useEffect, useRef } from "react";
+import { Card, Typography, Layout, FloatButton, Modal, Input, Button } from "antd";
+import { MessageOutlined, SendOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
-import { getResponse } from "../api/api";
 import "./reinforcement.css";
+import type { ChatWithIARequest, ChatWithIAResponse } from "./model";
 const MIN_CHARACTERS = 1;
 
 export function StudentProfile() {
@@ -50,10 +50,19 @@ export function StudentProfile() {
       setIsTyping(true);
 
       try {
-        const botResponse = await getResponse(newMessage.text);
+        const response = await fetch("http://localhost:3001/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ question: inputValue } as ChatWithIARequest),
+        });
+
+        const data = await response.json() as ChatWithIAResponse;
+        console.log("respuesta", data)
         setMessages(prev => [
           ...prev,
-          { sender: "bot", text: botResponse }
+          { sender: "bot", text: data.answer }
         ]);
       } catch (error) {
         console.error("Error al obtener respuesta de la IA:", error);

@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { Chat_PORT } from './tokens';
-import { ChatAdapter } from './chat.adapter';
 
-const implProvider = {
+const ChatProvider = {
   provide: Chat_PORT,
   useClass: (() => {
     //const provider = process.env.LLM_PROVIDER?.toLowerCase();
@@ -16,14 +15,14 @@ const implProvider = {
     // }
     const provider = process.env.Chat_PROVIDER?.toLowerCase();
       if (provider === 'openai') {
-        return require('@/modules/chat-openai/infrastructure/openai.adapter')
-          .OpenAiAdapter;
+        return require('@/modules/chat-openai/infrastructure/chat.adapter')
+          .ChatAdapter;
       }
   })(),
 };
 
 @Module({
-  providers: [implProvider],
+  providers: [ChatProvider],
   exports: [Chat_PORT],
 })
 export class ChatModule {}
