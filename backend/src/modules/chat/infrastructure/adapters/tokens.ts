@@ -1,1 +1,1 @@
-export const Chat_PORT = Symbol('ChatPort');
+export const Chat_PORT = Symbol('CHAT_PORT');
