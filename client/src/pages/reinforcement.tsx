@@ -7,7 +7,7 @@ import type { ChatWithIARequest, ChatWithIAResponse } from "./model";
 const MIN_CHARACTERS = 1;
 
 export function StudentProfile() {
-  const [activeSubject, setActiveSubject] = useState("Matemáticas");
+  const [activeSubject] = useState("Matemáticas");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
