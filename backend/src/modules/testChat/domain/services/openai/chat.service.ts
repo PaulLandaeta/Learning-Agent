@@ -101,7 +101,7 @@ export class ChatInterviewService {
       }
 
       const coachingResponse: OpenAICoachingResponse = JSON.parse(responseContent) as OpenAICoachingResponse;
-      
+      console.log('resp advice',coachingResponse);
       return coachingResponse;
 
     } catch (error) {

@@ -1,6 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, Input, Typography, Button, Modal, Space } from 'antd';
 import { RightOutlined, SendOutlined } from '@ant-design/icons';
+import type { ExceptionStatusType } from 'antd/es/result';
+interface AdviceReq {
+  question: string;
+  answer: string;
+  topic: string;
+}
+interface QuestionResponse  {
+  question : string;
+}
+interface AdviceResp {
+  generated_question: string;
+  user_response: string;
+  coaching_advice: Record<string,string>;
+}
+interface Data {
+  sender : string;
+  text: string;
+}
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -33,14 +51,33 @@ const ChatMessage = ({ text, isUser }) => {
 };
 
 export default function InterviewChat() {
-  const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'insertar pregunta' }
-  ]);
+  const [messages, setMessages] = useState<Data[]>([]);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
+const getQuestion = async () =>{
+        try{
+          const response = await fetch("http://localhost:3001/chatint/question?topico=fisica", {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            const data = await response.json() as QuestionResponse;
+            setMessages ((messages) => [...messages, { sender: 'bot', text: data.question } ]) 
+            console.log("respuesta", data);
+        } catch(e){
+          console.log(e)
+        }
+    } 
+  useEffect(() => {
+    
+    getQuestion();
+    
+  },[]);
+
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -48,21 +85,43 @@ export default function InterviewChat() {
     }
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim() || isInputDisabled) return;
+  const sendAnswer = async (q:string, ans:string, t:string): Promise<AdviceResp|null> =>{
+    try {
+        const response = await fetch("http://localhost:3001/chatint/advice", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ question: q, answer: ans, topic:t  } as AdviceReq),
+        });
 
+        const dataR = await response.json() as AdviceResp;
+        console.log("respuesta", dataR);
+        return dataR;
+    } catch(e){
+      console.log(e)
+      return null
+    }
+    
+  } 
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isInputDisabled) return;
+    const lastQ = messages[messages.length -1].text;
     const userMessage = { sender: 'user', text: inputValue.trim() };
     setMessages(prevMessages => [...prevMessages, userMessage]);
     setInputValue('');
     setIsInputDisabled(true);
+    const resp = await sendAnswer(lastQ, userMessage.text, 'fisica');
 
-    if (!feedbackGiven) {
-      setTimeout(() => {
-        const botResponse = { sender: 'bot', text: 'Gracias por tu respuesta. Esa es una buena perspectiva.' };
+    //if (!feedbackGiven) {
+        const botResponse =  { sender: 'bot', text: (resp==null?'hubo un problema':resp.coaching_advice )};
         setMessages(prevMessages => [...prevMessages, botResponse]);
-        setFeedbackGiven(true);
-      }, 500);
-    }
+        //setFeedbackGiven(true);
+
+   // }
+    await getQuestion();
+    setIsInputDisabled(false);
   };
 
   const handleNextQuestionClick = () => {
