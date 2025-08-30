@@ -59,7 +59,7 @@ export default function InterviewChat() {
   const messagesEndRef = useRef(null);
 const getQuestion = async () =>{
         try{
-          const response = await fetch("http://localhost:3001/chatint/question?topico=fisica", {
+          const response = await fetch("http://localhost:3000/chatint/question?topico=fisica", {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
@@ -87,7 +87,7 @@ const getQuestion = async () =>{
 
   const sendAnswer = async (q:string, ans:string, t:string): Promise<AdviceResp|null> =>{
     try {
-        const response = await fetch("http://localhost:3001/chatint/advice", {
+        const response = await fetch("http://localhost:3000/chatint/advice", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
