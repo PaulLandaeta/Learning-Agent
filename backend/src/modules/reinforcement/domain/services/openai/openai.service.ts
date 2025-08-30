@@ -14,7 +14,8 @@ export class OpenAIService {
     private readonly promptTemplatePort: PromptTemplatePort,
   ) {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || 'your-api-key-here',
+      apiKey: process.env.DEEPSEEK_API_KEY || 'your-api-key-here',
+      baseURL: 'https://api.deepseek.com/v1'
     });
   }
 
@@ -26,7 +27,7 @@ export class OpenAIService {
         const prompt = await this.promptTemplatePort.render('singleQuestion.v1', vars)
         console.log(prompt)
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: 'deepseek-chat',
         messages: [
           {
             role: 'system',
