@@ -9,7 +9,8 @@ import { ChatFloatButton } from "../../components/reinforcement/ChatFloatButton"
 
 export function Reinforcement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isChatOpen, handleChatClick, setIsChatOpen } = useChatLogic();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const { handleChatClick } = useChatLogic(isChatOpen);
 
   const studentActivities = {
     courses: [
@@ -56,7 +57,7 @@ export function Reinforcement() {
             </Row>
             <CourseCards courses={studentActivities.courses} />
           </div>
-          <ChatFloatButton onClick={handleChatClick} />
+          <ChatFloatButton onClick={() => setIsChatOpen(true)} />
         </Layout.Content>
       </Layout>
       <Modal
