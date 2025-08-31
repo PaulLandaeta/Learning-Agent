@@ -1,72 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Card, Input, Typography, Button, Modal, Space } from 'antd';
-import { RightOutlined, SendOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Typography, Button, Modal, Row, Col } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import OpenQuestion from '../../components/interview/OpenQuestion';
+import TeoricQuestion from '../../components/interview/TeoricQuestion';
+import MultipleQuestion from '../../components/interview/MultipleQuestion';
 
 const { Title } = Typography;
-const { Search } = Input;
 
-const ChatMessage = ({ text, isUser }) => {
-  const messageStyle = {
-    padding: '12px 18px',
-    borderRadius: '22px',
-    maxWidth: '75%',
-    wordWrap: 'break-word',
-    fontSize: '15px',
-    backgroundColor: isUser ? '#f0f2f5' : '#e6e6e6',
-    color: '#333',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-  };
+const shuffleArray = (array) => {
+  let currentIndex = array.length, randomIndex;
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: isUser ? 'flex-end' : 'flex-start',
-        marginBottom: '12px',
-      }}
-    >
-      <div style={messageStyle}>
-        {text}
-      </div>
-    </div>
-  );
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+  return array;
 };
 
 export default function InterviewChat() {
-  const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'insertar pregunta' }
-  ]);
-  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isInputDisabled, setIsInputDisabled] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const messagesEndRef = useRef(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  
+  const [questionOrder, setQuestionOrder] = useState([]);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
+    const questions = ['open', 'teoric', 'multiple', 'open'];
+    setQuestionOrder(shuffleArray(questions));
+  }, []);
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim() || isInputDisabled) return;
-
-    const userMessage = { sender: 'user', text: inputValue.trim() };
-    setMessages(prevMessages => [...prevMessages, userMessage]);
-    setInputValue('');
-    setIsInputDisabled(true);
-
-    if (!feedbackGiven) {
-      setTimeout(() => {
-        const botResponse = { sender: 'bot', text: 'Gracias por tu respuesta. Esa es una buena perspectiva.' };
-        setMessages(prevMessages => [...prevMessages, botResponse]);
-        setFeedbackGiven(true);
-      }, 500);
+  const handleFinishClick = () => {
+    setIsModalOpen(true);
+  };
+  
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questionOrder.length - 1) {
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+    } else {
+      setIsModalOpen(true);
     }
   };
 
-  const handleNextQuestionClick = () => {
-    setIsModalOpen(true);
+  const currentQuestionType = questionOrder[currentQuestionIndex];
+
+  const renderQuestionComponent = () => {
+    switch (currentQuestionType) {
+      case 'open':
+        return <OpenQuestion key={currentQuestionIndex} onNextQuestion={handleNextQuestion} />;
+      case 'teoric':
+        return <TeoricQuestion key={currentQuestionIndex} onNextQuestion={handleNextQuestion} />;
+      case 'multiple':
+        return <MultipleQuestion key={currentQuestionIndex} onNextQuestion={handleNextQuestion} />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -76,7 +65,7 @@ export default function InterviewChat() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        backgroundColor: '#fff',
+        backgroundColor: '#f5f7fa',
         padding: '20px',
         boxSizing: 'border-box',
       }}
@@ -84,97 +73,61 @@ export default function InterviewChat() {
       <Card
         style={{
           width: '100%',
-          maxWidth: '800px',
+          maxWidth: '1200px',
           height: '100%',
           maxHeight: '800px',
           borderRadius: '12px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
           display: 'flex',
           flexDirection: 'column',
+          backgroundColor: '#fff',
         }}
-        bodyStyle={{ flex: 1, overflowY: 'auto', padding: '24px' }}
+        bodyStyle={{ flex: 1, overflowY: 'hidden', padding: 0, display: 'flex', flexDirection: 'column' }}
       >
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {messages.map((msg, index) => (
-            <ChatMessage
-              key={index}
-              text={msg.text}
-              isUser={msg.sender === 'user'}
-            />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </Card>
-      
-      {/* Input de chat fijo en la parte inferior */}
-      <div 
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          width: '100%',
-          maxWidth: '800px',
-          padding: '0 20px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ width: '100%', maxWidth: '760px' }}>
-          <Input
-            placeholder="Escribe tu respuesta..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onPressEnter={handleSendMessage}
-            disabled={isInputDisabled}
-            size="large"
-            style={{ borderRadius: '25px', paddingRight: '0px' }}
-            suffix={
+        <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid #e8e8e8' }}>
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={4} style={{ margin: 0, color: '#1A2A80' }}>
+                Entrevista
+              </Title>
+            </Col>
+            <Col>
               <Button
+                icon={<CloseOutlined />}
+                onClick={handleFinishClick}
                 type="text"
-                icon={<SendOutlined />}
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isInputDisabled}
-                style={{ color: '#1890ff' }}
-              />
-            }
-          />
+                style={{
+                  color: '#fff',
+                  backgroundColor: '#1A2A80',
+                  borderRadius: '8px',
+                  height: '36px',
+                  fontWeight: '500',
+                  padding: '0 16px',
+                }}
+              >
+                Finalizar
+              </Button>
+            </Col>
+          </Row>
         </div>
-      </div>
-      
-      {/* Botón de "Siguiente Pregunta" fijo en la esquina */}
-      <div 
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-        }}
-      >
-        <Button
-          type="text"
-          icon={<RightOutlined />}
-          onClick={handleNextQuestionClick}
-          style={{ 
-            color: '#000', 
-            background: '#fff',
-            borderRadius: '50%',
-            width: '40px',
-            height: '40px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-          }}
-        />
-      </div>
+        
+        {renderQuestionComponent()}
+
+      </Card>
 
       <Modal
-        title="Funcionalidad en desarrollo"
+        title="Finalizar Entrevista"
         open={isModalOpen}
+        onOk={() => {
+          setIsModalOpen(false);
+          navigate('/reinforcement');
+        }}
         onCancel={() => setIsModalOpen(false)}
-        footer={[
-          <Button key="back" onClick={() => setIsModalOpen(false)}>
-            Cerrar
-          </Button>,
-        ]}
+        okText="Sí, finalizar"
+        cancelText="No, continuar"
       >
-        <p>Esta funcionalidad aún está en desarrollo y estará disponible pronto.</p>
+        <p>¿Estás seguro de que quieres finalizar la entrevista?</p>
+        <p>Perderás el progreso actual.</p>
       </Modal>
     </div>
   );
