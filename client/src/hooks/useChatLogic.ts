@@ -15,36 +15,36 @@ interface ChatWithIAResponse {
 
 const MIN_CHARACTERS = 1;
 
-export const useChatLogic = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+export const useChatLogic = (isOpen: boolean) => {
+  //const [isChatOpen, setIsChatOpen] = useState(false);
+  debugger;
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isChatOpen && messages.length === 0) {
+    debugger;
+    if (isOpen && messages.length === 0) {
       setIsTyping(true);
       setTimeout(() => {
-        setMessages([
-          {
-            text: "¡Hola! Soy tu asistente. ¿En qué puedo ayudarte hoy?",
-            sender: "bot",
-          },
-        ]);
+        setMessages(prev => [
+      ...prev,
+      { text: "¡Hola! Soy tu asistente. ¿En qué puedo ayudarte hoy?", sender: "bot" },
+    ]);
         setIsTyping(false);
         scrollToBottom();
       }, 3000); 
     }
     scrollToBottom();
-  }, [isChatOpen]);
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleChatClick = () => {
-    setIsChatOpen(true);
+    //setIsChatOpen(true);
   };
 
   const handleSendMessage = async () => {
@@ -85,9 +85,8 @@ export const useChatLogic = () => {
   };
 
   return {
-    isChatOpen,
+    isOpen,
     handleChatClick,
-    setIsChatOpen,
     isTyping,
     messages,
     inputValue,
