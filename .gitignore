@@ -1,5 +1,5 @@
 node_modules
-.idea
+.idea/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
