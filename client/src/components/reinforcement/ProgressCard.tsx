@@ -28,25 +28,26 @@ const Sparkline: React.FC<{ data: number[] }> = ({ data }) => {
     </svg>
   );
 };
+
 export const ProgressCard: React.FC = () => (
   <Col span={24}>
     <Card className="border-none rounded-2xl shadow-xl p-8 bg-white transition-all duration-300 ease-in-out hover:transform hover:-translate-y-2 hover:shadow-2xl">
       <div className="flex flex-col md:flex-row items-center justify-between w-full space-y-6 md:space-y-0 md:space-x-12">
-        <div className="flex-1 space-y-4 text-left">
-          <Typography.Text className="!text-[#1A2A80] !text-4xl !font-bold leading-tight block mb-4"> 
+        <div className="flex-1 space-y-3 text-left">
+          <Typography.Text className="!text-[#1A2A80] !text-4xl !font-bold leading-tight block mb-4">
             Programación
           </Typography.Text>
-          <Typography.Text className="!text-[#1A2A80] !text-2xl leading-tight block"> 
+          <Typography.Text className="!text-[#1A2A80] !text-2xl leading-tight block">
             Último examen: 14/08/2025
           </Typography.Text>
           <Typography.Text className="!text-[#1A2A80] !text-2xl leading-tight block">
             Tasa de éxito: 80%
           </Typography.Text>
            <Typography.Text className="!text-[#1A2A80] !text-2xl leading-tight block">
-            Nota ultimo examen: 80
+            Nota de último examen: 80
           </Typography.Text>
         </div>
-        <div className="flex-1 h-64 flex items-center justify-center">
+        <div className="flex-1 h-56 flex items-center justify-center">
           <Sparkline data={[60, 85, 95, 75, 88, 92, 80, 70, 90, 82, 98, 87]} />
         </div>
       </div>
