@@ -5,6 +5,36 @@ import type {
   UploadResponse 
 } from "../interfaces/documentInterface";
 
+// Interface para errores de HTTP
+interface HttpError {
+  response?: {
+    status: number;
+    data?: unknown;
+  };
+  message?: string;
+}
+
+// Función auxiliar para obtener el token de autenticación
+const getAuthToken = (): string => {
+  const authData = localStorage.getItem("auth");
+  if (!authData) {
+    throw new Error('No hay datos de autenticación disponibles. Por favor, inicia sesión.');
+  }
+  
+  try {
+    const parsedAuth = JSON.parse(authData);
+    const token = parsedAuth.accessToken;
+    
+    if (!token) {
+      throw new Error('Token de acceso no encontrado. Por favor, inicia sesión nuevamente.');
+    }
+    
+    return token;
+  } catch {
+    throw new Error('Error al leer los datos de autenticación. Por favor, inicia sesión nuevamente.');
+  }
+};
+
 // Interfaces para las respuestas del backend
 interface DocumentBackendResponse {
   id: string;
@@ -116,6 +146,9 @@ export const documentService = {
    */
   async uploadDocument(file: File): Promise<UploadResponse> {
     try {
+      // Obtener el token de autenticación usando la función auxiliar
+      const token = getAuthToken();
+
       const formData = new FormData();
       formData.append('file', file);
 
@@ -125,6 +158,7 @@ export const documentService = {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
           },
         }
       );
@@ -144,9 +178,26 @@ export const documentService = {
         success: true,
         data: document,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error uploading document:', error);
-      throw new Error('Error al subir el documento');
+      
+      const httpError = error as HttpError;
+      
+      // Manejar errores específicos de autenticación
+      if (httpError.response?.status === 401) {
+        throw new Error('No autorizado. Por favor, inicia sesión nuevamente.');
+      }
+      
+      if (httpError.response?.status === 403) {
+        throw new Error('Sin permisos para subir documentos.');
+      }
+      
+      // Si es un error de la función getAuthToken, mantener el mensaje original
+      if ((error as Error).message?.includes('autenticación') || (error as Error).message?.includes('sesión')) {
+        throw error;
+      }
+      
+      throw new Error('Error al subir el documento. Por favor, inténtalo nuevamente.');
     }
   },
 
