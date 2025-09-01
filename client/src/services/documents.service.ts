@@ -1,4 +1,6 @@
 import apiClient from "../api/apiClient";
+import axios from "axios";
+import { meAPI } from "./authService";
 import type { 
   Document, 
   DocumentListResponse, 
@@ -14,8 +16,17 @@ interface HttpError {
   message?: string;
 }
 
-// Función auxiliar para obtener el token de autenticación
-const getAuthToken = (): string => {
+// Interface para la información del usuario
+interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  lastname: string;
+  roles: string[];
+}
+
+// Función auxiliar para obtener el token de autenticación y verificar que el usuario esté autenticado
+const getAuthTokenAndVerifyUser = async (): Promise<{ token: string; user: UserInfo }> => {
   const authData = localStorage.getItem("auth");
   if (!authData) {
     throw new Error('No hay datos de autenticación disponibles. Por favor, inicia sesión.');
@@ -29,9 +40,15 @@ const getAuthToken = (): string => {
       throw new Error('Token de acceso no encontrado. Por favor, inicia sesión nuevamente.');
     }
     
-    return token;
-  } catch {
-    throw new Error('Error al leer los datos de autenticación. Por favor, inicia sesión nuevamente.');
+    // Verificar que el token sea válido y obtener información del usuario
+    const user = await meAPI(token) as UserInfo;
+    
+    return { token, user };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Error al obtener información del usuario')) {
+      throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+    }
+    throw new Error('Error al verificar la autenticación. Por favor, inicia sesión nuevamente.');
   }
 };
 
@@ -146,20 +163,26 @@ export const documentService = {
    */
   async uploadDocument(file: File): Promise<UploadResponse> {
     try {
-      // Obtener el token de autenticación usando la función auxiliar
-      const token = getAuthToken();
+      // Obtener el token y verificar autenticación usando meAPI
+      const { token } = await getAuthTokenAndVerifyUser();
 
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await apiClient.post<UploadBackendResponse>(
-        '/api/documents/upload', 
+      // Preparar headers (NO incluir Content-Type para multipart/form-data)
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+      };
+
+      // Usar axios directamente para evitar conflictos con interceptores
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/";
+      
+      const response = await axios.post<UploadBackendResponse>(
+        `${API_URL}api/documents/upload`, 
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
-          },
+        { 
+          headers,
+          timeout: 30000 // 30 segundos de timeout
         }
       );
 
@@ -192,8 +215,10 @@ export const documentService = {
         throw new Error('Sin permisos para subir documentos.');
       }
       
-      // Si es un error de la función getAuthToken, mantener el mensaje original
-      if ((error as Error).message?.includes('autenticación') || (error as Error).message?.includes('sesión')) {
+      // Si es un error de la función getAuthTokenAndVerifyUser, mantener el mensaje original
+      if ((error as Error).message?.includes('autenticación') || 
+          (error as Error).message?.includes('sesión') ||
+          (error as Error).message?.includes('meAPI')) {
         throw error;
       }
       
