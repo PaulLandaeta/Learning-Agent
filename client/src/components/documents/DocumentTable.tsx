@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Table, Button, Space, Radio, Tooltip, Grid, Typography } from 'antd';
 import type { Key } from 'react';
+import { Table, Button, Space, Radio, Tooltip, Grid, Typography } from 'antd';
 import type { TablePaginationConfig, SorterResult, FilterValue } from 'antd/es/table/interface';
 import { DownloadOutlined, EyeOutlined, FileTextOutlined, FilterOutlined, FilterFilled } from '@ant-design/icons';
 import DeleteButton from '../safetyModal';
@@ -30,8 +30,35 @@ export const DocumentTable = ({
   onDeleteSuccess,
   onDeleteError 
 }: DocumentTableProps) => {
+  const screens = useBreakpoint();
+  const isSmallScreen = !screens.lg;
+
   // Filter key types for the size column
   type SizeFilterKey = 'lt_100kb' | '100kb_1mb' | '1mb_5mb' | 'gt_5mb';
+
+  // Mantener el estado del sorter activo para mostrar tooltips dinámicos
+  const [sorterState, setSorterState] = useState<{
+    columnKey?: Key;
+    order?: 'ascend' | 'descend' | null;
+  } | null>(null);
+
+  const getSortTooltip = (columnKey: string) => {
+    if (!sorterState || sorterState.columnKey !== columnKey) {
+      return 'Haz clic para ordenar de forma ascendente';
+    }
+    if (sorterState.order === 'ascend') return 'Haz clic para ordenar de forma descendente';
+    if (sorterState.order === 'descend') return 'Haz clic para cancelar el orden';
+    return 'Haz clic para ordenar de forma ascendente';
+  };
+
+  const handleTableChange = (
+    _pagination: TablePaginationConfig,
+    _filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<Document> | SorterResult<Document>[]
+  ) => {
+    const s = Array.isArray(sorter) ? sorter[0] : sorter;
+    setSorterState({ columnKey: s?.columnKey as Key, order: s?.order ?? null });
+  };
 
   // Componente interno para el dropdown de filtro de tamaño (etiquetas en español)
   type SizeDropdownProps = {
@@ -83,37 +110,20 @@ export const DocumentTable = ({
       </div>
     );
   };
-    // sorter state to drive dynamic tooltip for the 'Tamaño' column only
-    const [sorterState, setSorterState] = useState<{
-      columnKey?: Key;
-      order?: 'ascend' | 'descend' | null;
-    } | null>(null);
 
-    const getSortTooltip = (columnKey: string) => {
-      if (!sorterState || sorterState.columnKey !== columnKey) {
-        return 'Haz clic para ordenar de forma ascendente';
-      }
-      if (sorterState.order === 'ascend') return 'Haz clic para ordenar de forma descendente';
-      if (sorterState.order === 'descend') return 'Haz clic para cancelar el orden';
-      return 'Haz clic para ordenar de forma ascendente';
-    };
-
-    const handleTableChange = (
-      _pagination: TablePaginationConfig,
-      _filters: Record<string, FilterValue | null>,
-      sorter: SorterResult<Document> | SorterResult<Document>[]
-    ) => {
-      const s = Array.isArray(sorter) ? sorter[0] : sorter;
-      setSorterState({ columnKey: s?.columnKey as Key, order: s?.order ?? null });
-    };
-  const screens = useBreakpoint();
-  const isSmallScreen = !screens.lg;
   const columns = [
     {
-      title: 'Nombre del archivo',
+      title: (
+        <Tooltip title={getSortTooltip('originalName')}>
+          <div style={{ display: 'block', width: '100%', paddingRight: 40 }}>
+            <span style={{ display: 'inline-block' }}>Nombre del archivo</span>
+          </div>
+        </Tooltip>
+      ),
       dataIndex: 'originalName',
       key: 'originalName',
       sorter: (a: Document, b: Document) => a.originalName.localeCompare(b.originalName),
+      showSorterTooltip: false,
       ellipsis: true,
       width: isSmallScreen ? undefined : '40%',
       render: (text: string) => (
@@ -140,12 +150,19 @@ export const DocumentTable = ({
       ),
     },
     ...(!isSmallScreen ? [{
-      title: 'Fecha de subida',
+      title: (
+        <Tooltip title={getSortTooltip('uploadedAt')}>
+          <div style={{ display: 'block', width: '100%', paddingRight: 40 }}>
+            <span style={{ display: 'inline-block' }}>Fecha de subida</span>
+          </div>
+        </Tooltip>
+      ),
       dataIndex: 'uploadedAt',
       key: 'uploadedAt',
       width: '20%',
       sorter: (a: Document, b: Document) =>
         new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime(),
+      showSorterTooltip: false,
       render: (date: string) => (
         <Text style={{ fontSize: '14px' }}>
           {new Date(date).toLocaleDateString('es-ES')}
@@ -171,7 +188,7 @@ export const DocumentTable = ({
         { text: '> 5 MB', value: 'gt_5mb' },
       ],
       filterMultiple: false,
-  filterDropdown: (props: SizeDropdownProps) => <SizeFilterDropdown {...props} />,
+      filterDropdown: (props: SizeDropdownProps) => <SizeFilterDropdown {...props} />,
       filterIcon: (filtered: boolean) => (
         <Tooltip title={filtered ? 'Filtro activo' : 'Filtrar por tamaño'}>
           {filtered ? <FilterFilled style={{ color: '#1A2A80' }} /> : <FilterOutlined />}
@@ -272,7 +289,7 @@ export const DocumentTable = ({
       columns={columns}
       dataSource={documents}
       loading={loading}
-  onChange={handleTableChange}
+      onChange={handleTableChange}
       rowKey="fileName"
       pagination={{ 
         pageSize: isSmallScreen ? 5 : 10,
