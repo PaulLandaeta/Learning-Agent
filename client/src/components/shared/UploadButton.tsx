@@ -566,19 +566,19 @@ const UploadButton: React.FC<UploadButtonProps> = ({
             <div style={{ 
               textAlign: 'center', 
               padding: isSmallScreen ? '30px 16px' : '40px 20px',
-              backgroundColor: '#f6ffed',
+              backgroundColor: isDark ? token.colorBgElevated : '#f6ffed',
               borderRadius: '8px',
-              border: '2px solid var(--ant-color-success)'
+              border: `2px solid ${isDark ? token.colorSuccess : 'var(--ant-color-success)'}`
             }}>
               <CheckCircleOutlined style={{ 
                 fontSize: isSmallScreen ? '48px' : '64px', 
-                color: '#52c41a', 
+                color: isDark ? token.colorSuccess : '#52c41a', 
                 marginBottom: isSmallScreen ? '12px' : '16px',
                 display: 'block'
               }} />
               
               <Text style={{ 
-                color: '#389e0d', 
+                color: isDark ? token.colorSuccess : '#389e0d', 
                 fontSize: isSmallScreen ? '16px' : '18px', 
                 fontWeight: '600',
                 display: 'block',
@@ -589,7 +589,7 @@ const UploadButton: React.FC<UploadButtonProps> = ({
 
               {selectedFile && (
                 <Text style={{ 
-                  color: '#666', 
+                  color: isDark ? token.colorTextSecondary : '#666', 
                   fontSize: isSmallScreen ? '12px' : '14px',
                   display: 'block',
                   marginBottom: '16px'
@@ -602,8 +602,8 @@ const UploadButton: React.FC<UploadButtonProps> = ({
                 type="primary"
                 onClick={handleCloseModal}
                 style={{
-                  backgroundColor: 'var(--ant-color-success)',
-                  borderColor: 'var(--ant-color-success)',
+                  backgroundColor: isDark ? token.colorSuccess : 'var(--ant-color-success)',
+                  borderColor: isDark ? token.colorSuccess : 'var(--ant-color-success)',
                   marginTop: '16px'
                 }}
                 size={isSmallScreen ? "middle" : "large"}

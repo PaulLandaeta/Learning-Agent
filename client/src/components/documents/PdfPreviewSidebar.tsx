@@ -70,11 +70,13 @@ export const PdfPreviewSidebar: React.FC<PdfPreviewSidebarProps> = ({
         backgroundColor: isDark ? token.colorBgContainer : '#FFFFFF',
         boxShadow: isDark ? '-4px 0 20px rgba(91, 110, 240, 0.1)' : '-4px 0 20px rgba(0, 0, 0, 0.15)',
         zIndex: isSmallScreen ? 1050 : 1000,
-        display: visible ? 'flex' : 'none',
+        display: 'flex',
         flexDirection: 'column',
         borderLeft: `1px solid ${isDark ? token.colorBorder : '#E8E8E8'}`,
         transform: visible ? 'translateX(0)' : 'translateX(100%)',
-        transition: 'transform 0.3s ease-in-out',
+        opacity: visible ? 1 : 0,
+        visibility: visible ? 'visible' : 'hidden',
+        transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out',
       }}
     >
       {/* Header */}
