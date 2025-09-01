@@ -3,9 +3,11 @@ import {
   Injectable,
   NestMiddleware,
   UnauthorizedException,
+  Inject,
 } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import * as jwt from 'jsonwebtoken';
+import type { TokenServicePort } from '../../../../identity/domain/ports/token-service.port';
+import { TOKEN_SERVICE } from '../../../../identity/tokens';
 
 // Interface para el payload del JWT
 interface JwtPayload {
@@ -29,6 +31,10 @@ export interface AuthenticatedRequest extends Request {
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
+  constructor(
+    @Inject(TOKEN_SERVICE) private readonly tokens: TokenServicePort,
+  ) {}
+
   use(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
       // 1. Extraer token del header Authorization
@@ -47,9 +53,8 @@ export class AuthMiddleware implements NestMiddleware {
         throw new UnauthorizedException('Token no proporcionado');
       }
 
-      // 2. Verificar y decodificar el JWT con tipado seguro
-      const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret-key';
-      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload; // ✅ Tipado seguro
+      // 2. Verificar y decodificar el JWT usando el mismo servicio que /auth/me
+      const decoded = this.tokens.verifyAccess(token) as JwtPayload;
 
       // 3. Extraer información del usuario del payload JWT
       const userId = decoded.sub || decoded.userId || decoded.id;
@@ -60,33 +65,20 @@ export class AuthMiddleware implements NestMiddleware {
       }
 
       req.user = {
-        id: userId, // ✅ Ya no hay error de ESLint
+        id: userId,
         email: decoded.email,
         role: decoded.role,
       };
 
-      console.log('Usuario autenticado:', req.user.id);
       next();
     } catch (error) {
-      // Manejo específico de errores JWT
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedException('Token JWT inválido');
-      }
-      if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedException('Token JWT expirado');
-      }
-
-      if (error instanceof jwt.NotBeforeError) {
-        throw new UnauthorizedException('Token JWT aún no es válido');
-      }
-
-      // Otros errores de autenticación
+      
+      // Si es un error de UnauthorizedException, re-lanzarlo
       if (error instanceof UnauthorizedException) {
         throw error;
       }
 
       // Error inesperado
-      console.error('Error inesperado en AuthMiddleware:', error);
       throw new UnauthorizedException('Error de autenticación');
     }
   }

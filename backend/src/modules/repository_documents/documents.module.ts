@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AiConfigService } from '../../core/ai/ai.config';
+import { IdentityModule } from '../identity/identity.module';
 import {
   FILE_STORAGE_REPO,
   DOCUMENT_REPOSITORY_PORT,
@@ -47,7 +48,7 @@ import { SearchDocumentsUseCase } from './application/use-cases/search-documents
 import { NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { AuthMiddleware } from './infrastructure/http/middleware/auth.middleware';
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, IdentityModule],
   controllers: [DocumentsController, EmbeddingsController],
   providers: [
     // Servicios de configuración
