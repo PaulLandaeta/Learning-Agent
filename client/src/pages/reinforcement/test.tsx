@@ -4,7 +4,9 @@ import { Link } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
-export default function Exam() {
+
+export default function Test() {
+
   return (
     <div style={{ padding: 24 }}>
       <Card style={{ borderRadius: 12, maxWidth: 800, margin: "0 auto" }}>

@@ -1,53 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Input, Button, Row, Col } from 'antd';
+import { Input, Button } from 'antd';
 import { SendOutlined, RightOutlined } from '@ant-design/icons';
-
-interface AdviceReq {
-  question: string;
-  answer: string;
-  topic: string;
-}
-interface QuestionResponse {
-  question: string;
-}
-interface AdviceResp {
-  generated_question: string;
-  user_response: string;
-  coaching_advice: string;
-}
-interface Data {
-  sender: string;
-  text: string;
-}
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes pulse-dots {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.5;
-    }
-    50% {
-      transform: scale(1.2);
-      opacity: 1;
-    }
-  }
-`;
-document.head.appendChild(style);
 
 const TypingIndicator = () => (
   <div className="flex items-center space-x-1 p-4 rounded-3xl bg-gray-200 shadow-md max-w-fit">
-    <div
-      className="w-2 h-2 bg-gray-600 rounded-full"
-      style={{ animation: 'pulse-dots 1s infinite ease-in-out', animationDelay: '0s' }}
-    ></div>
-    <div
-      className="w-2 h-2 bg-gray-600 rounded-full"
-      style={{ animation: 'pulse-dots 1s infinite ease-in-out', animationDelay: '0.2s' }}
-    ></div>
-    <div
-      className="w-2 h-2 bg-gray-600 rounded-full"
-      style={{ animation: 'pulse-dots 1s infinite ease-in-out', animationDelay: '0.4s' }}
-    ></div>
+    {[0, 0.2, 0.4].map((delay, i) => (
+      <div
+        key={i}
+        className="w-2 h-2 bg-gray-600 rounded-full"
+        style={{
+          animation: 'pulse-dots 1s infinite ease-in-out',
+          animationDelay: `${delay}s`,
+        }}
+      />
+    ))}
   </div>
 );
 
@@ -71,38 +37,37 @@ const ChatMessage = ({ text, isUser }) => {
         marginBottom: '12px',
       }}
     >
-      <div style={messageStyle}>
-        {text}
-      </div>
+      <div style={messageStyle}>{text}</div>
     </div>
   );
 };
 
-export default function OpenQuestion({ onNextQuestion }) {
-  const [messages, setMessages] = useState<Data[]>([]);
+export default function OpenQuestion() {
+  const [messages, setMessages] = useState([]);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showNextQuestionButton, setShowNextQuestionButton] = useState(false);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const hasFetchedInitial = useRef(false); // ✅ evita doble carga
 
-  const getQuestion = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/chatint/question?topico=fisica", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json() as QuestionResponse;
-      setMessages((messages) => [...messages, { sender: 'bot', text: data.question }]);
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes pulse-dots {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   useEffect(() => {
     const fetchInitialQuestion = async () => {
+      if (hasFetchedInitial.current) return;
+      hasFetchedInitial.current = true;
+
       setIsBotTyping(true);
       await getQuestion();
       setIsBotTyping(false);
@@ -111,56 +76,69 @@ export default function OpenQuestion({ onNextQuestion }) {
   }, []);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendAnswer = async (q: string, ans: string, t: string): Promise<AdviceResp | null> => {
+  const getQuestion = async () => {
     try {
-      const response = await fetch("http://localhost:3000/chatint/advice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ question: q, answer: ans, topic: t } as AdviceReq),
-      });
-
-      const dataR = await response.json() as AdviceResp;
-      return dataR;
+      const response = await fetch(`${import.meta.env.VITE_URL}${import.meta.env.VITE_CHATINT_URL}`);
+      const data = await response.json();
+      setMessages(prev => [...prev, { sender: 'bot', text: data.question }]);
     } catch (e) {
-      console.log(e);
+      console.error(e);
+    }
+  };
+  const sendAnswer = async (question, answer, topic) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_URL}${import.meta.env.VITE_CHATINT_ADVICE_URL}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, answer, topic }),
+      });
+      return await response.json();
+    } catch (e) {
+      console.error(e);
       return null;
     }
   };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isInputDisabled) return;
-    const lastQ = messages[messages.length - 1].text;
+
+    const lastQuestion = messages[messages.length - 1]?.text || '';
     const userMessage = { sender: 'user', text: inputValue.trim() };
-    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsInputDisabled(true);
-
     setIsBotTyping(true);
-    setTimeout(async () => {
-      const resp = await sendAnswer(lastQ, userMessage.text, 'fisica');
-      setIsBotTyping(false);
-      const botResponse = { sender: 'bot', text: (resp == null ? 'Hubo un problema.' : resp.coaching_advice) };
-      setMessages(prevMessages => [...prevMessages, botResponse]);
-      setShowNextQuestionButton(true);
-    }, 3000);
+
+    const resp = await sendAnswer(lastQuestion, userMessage.text, 'fisica');
+    setIsBotTyping(false);
+
+    const botResponse = {
+      sender: 'bot',
+      text: resp?.coaching_advice || 'Hubo un problema.',
+    };
+    setMessages(prev => [...prev, botResponse]);
+    setShowNextQuestionButton(true);
   };
 
-  const handleNextQuestionClick = () => {
-    onNextQuestion();
+  const handleNextQuestionClick = async () => {
+    setMessages([]);
+    setShowNextQuestionButton(false);
+    setIsInputDisabled(true);
+    setIsBotTyping(true);
+
+    await getQuestion();
+    setIsBotTyping(false);
+    setIsInputDisabled(false);
   };
 
   return (
     <>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
         {messages.map((msg, index) => (
-          <ChatMessage key={index} text={msg.text} isUser={msg.sender === 'user'} />
+          <ChatMessage key={index + msg.text} text={msg.text} isUser={msg.sender === 'user'} />
         ))}
         {isBotTyping && (
           <div className="flex justify-start mb-3">
