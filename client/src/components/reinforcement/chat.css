@@ -116,7 +116,6 @@
   box-shadow: 0 0 0 2px rgba(59, 56, 160, 0.1);
 }
 
-/* Animaciones */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -137,7 +136,6 @@
   }
 }
 
-/* --- Typing Indicator Animation --- */
 .simple-typing-indicator {
   display: flex;
   align-items: center;
