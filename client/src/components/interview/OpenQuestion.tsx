@@ -88,7 +88,7 @@ export default function OpenQuestion({ onNextQuestion }) {
 
   const getQuestion = async () => {
     try {
-      const response = await fetch("http://localhost:3000/chatint/question?topico=fisica", {
+      const response = await fetch(`${import.meta.env.VITE_URL}${import.meta.env.VITE_CHATINT_URL}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -118,7 +118,7 @@ export default function OpenQuestion({ onNextQuestion }) {
 
   const sendAnswer = async (q: string, ans: string, t: string): Promise<AdviceResp | null> => {
     try {
-      const response = await fetch("http://localhost:3000/chatint/advice", {
+      const response = await fetch(`${import.meta.env.VITE_URL}${import.meta.env.VITE_CHATINT_ADVICE_URL}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
