@@ -18,7 +18,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ isChatOpen, onClose }) => 
     handleSendMessage,
     setInputValue,
     handleKeyPress,
-  } = useChatLogic();
+  } = useChatLogic(isChatOpen);
 
   return (
     <Modal

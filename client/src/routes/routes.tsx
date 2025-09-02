@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ClassMenu } from "../pages/academic_management/ClassesMenu";
 import { StudentsByClass } from "../pages/academic_management/StudentsByClass";
 import { Reinforcement } from "../pages/reinforcement/reinforcement";
-import Exam from "../pages/reinforcement/exam";
 import Interview from "../pages/reinforcement/interview";
 import Login from "../pages/Login";
 import ForgotPasswordPage from "../pages/ForgotPassword";
@@ -18,6 +17,7 @@ import DashboardPage from "../pages/dashboard/DashboardPage";
 import SettingsPage from "../pages/settings/SettingsPage";
 import { TeacherCoursePage } from "../pages/courses/TeacherCoursePage";
 import { CoursePeriodsPage } from "../pages/courses/CoursePeriodsPage";
+import Test from "../pages/reinforcement/test";
 export const AppRoutes = () => {
   return (
     <BrowserRouter>
@@ -47,7 +47,7 @@ export const AppRoutes = () => {
             <Route element={<RoleRoute allowed={["estudiante"]} />}> 
               <Route path="/classes" element={<ClassMenu />} />
               <Route path="/reinforcement" element={<Reinforcement />} />
-              <Route path="/exam" element={<Exam />} />
+              <Route path="/test" element={<Test />} />
               <Route path="/interview" element={<Interview />} />
             </Route>
 
