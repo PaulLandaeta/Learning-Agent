@@ -106,9 +106,17 @@ const useClasses = () => {
     } else {
       const state = res?.code == 409 ? "info" : "error"
       return {
-        state,
-        message: res?.error
+        success: false
       }
+    }
+  }
+
+  const softDeleteClass = async (classId: string) => {
+    try {
+      const userId = user?.id || "";
+      return await claseService.softDeleteClase(classId, userId);
+    } catch (error) {
+      console.error(`Error deleting class with id ${classId}:`, error);
     }
   }
 
