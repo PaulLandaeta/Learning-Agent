@@ -1,1 +1,5 @@
-npm run pre-commit
+#!/usr/bin/env sh
+set -e
+
+# Run client pre-commit tasks
+npm --prefix ./client run pre-commit

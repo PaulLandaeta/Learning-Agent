@@ -32,7 +32,7 @@ function App() {
     const mode = theme === "system" ? systemTheme : theme;
     return mode === "dark" ? darkTheme : lightTheme;
   }, [theme, systemTheme]);
-  const paul = false;
+  const paul = true;
 
   return (
     <ConfigProvider theme={currentTheme} {...{ cssVar: { key: "app" } }}>
