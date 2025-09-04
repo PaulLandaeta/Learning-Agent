@@ -32,8 +32,8 @@ function App() {
     const mode = theme === "system" ? systemTheme : theme;
     return mode === "dark" ? darkTheme : lightTheme;
   }, [theme, systemTheme]);
-  const paul = true;
-  
+  const paul = false;
+
   return (
     <ConfigProvider theme={currentTheme} {...{ cssVar: { key: "app" } }}>
       <AntApp>
