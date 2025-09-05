@@ -40,4 +40,3 @@ describe('CreateRoleUseCase', () => {
     expect(repo.create).not.toHaveBeenCalled();
   });
 });
-
