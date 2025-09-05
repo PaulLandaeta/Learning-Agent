@@ -14,7 +14,7 @@ export class AttachPermissionUseCase {
       this.roleRepo.findById(input.roleId),
       this.permRepo.findById(input.permissionId),
     ]);
-    if (!role) throw new Error('Role not found');
+    if (!role) throw new Error('Role no existe papito Jorge :*');
     if (!perm) throw new Error('Permission not found');
     await this.roleRepo.attachPermission(input.roleId, input.permissionId);
     return { ok: true };
