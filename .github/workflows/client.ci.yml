@@ -16,17 +16,31 @@ on:
 permissions:
   contents: read
 
-env:
-  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
-  JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
-  JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-  OPENAI_API_KEY: "fake_key"
-  AI_API_KEY: "fake_key"
-
 jobs:
   test:
     name: Lint, Test, Build (${{ matrix.node }})
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+      JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      OPENAI_API_KEY: "fake_key"
+      AI_API_KEY: "fake_key"
+      
     timeout-minutes: 15
     strategy:
       matrix:
