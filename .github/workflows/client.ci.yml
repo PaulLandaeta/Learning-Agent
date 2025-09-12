@@ -64,6 +64,8 @@ jobs:
       - name: Setup DB
         working-directory: backend
         run: npx prisma migrate reset --force
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
 
       - name: Seed DB
         working-directory: backend
