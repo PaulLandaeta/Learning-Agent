@@ -61,6 +61,13 @@ jobs:
         run: |
           docker compose -f minio.compose.yml up -d
           docker compose -f compose.dev.yml up -d
+      - name: Setup DB
+        working-directory: backend
+        run: npx prisma migrate reset --force
+
+      - name: Seed DB
+        working-directory: backend
+        run: npm run seed
       
       - name: E2E (Cypress)
         uses: cypress-io/github-action@v6
