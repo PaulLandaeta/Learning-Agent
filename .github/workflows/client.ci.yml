@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        node: [20]
+        node: [18, 20]
 
     steps:
       - name: Checkout
@@ -39,7 +39,11 @@ jobs:
       - name: Install
         working-directory: client
         run: npm ci
-
+        
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+        
       - name: Lint
         working-directory: client
         run: npm run lint --if-present
