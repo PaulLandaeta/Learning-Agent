@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: ankane/pgvector:15
         ports:
           - 5433:5432
         env:
