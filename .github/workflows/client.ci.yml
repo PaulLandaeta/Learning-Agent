@@ -12,13 +12,17 @@ on:
     paths:
       - 'client/**'
       - '.github/workflows/ci-client.yml'
+
+permissions:
+  contents: read
+
 env:
   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
   JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
   JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
   OPENAI_API_KEY: "fake_key"
   AI_API_KEY: "fake_key"
-  
+
 jobs:
   test:
     name: Lint, Test, Build (${{ matrix.node }})
@@ -90,7 +94,3 @@ jobs:
           path: |
             client/dist/**
             client/junit.xml
-          path: |
-            client/dist/**
-            client/junit.xml
-
