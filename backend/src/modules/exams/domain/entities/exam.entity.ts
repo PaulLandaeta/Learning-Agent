@@ -12,7 +12,8 @@ export class Exam {
     public readonly timeMinutes: PositiveInt,
     public readonly reference: string | null,
     public readonly distribution: DistributionVO | null,
-    public readonly createdAt?: Date,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date,
   ) {}
   
   toJSON() {
@@ -25,6 +26,7 @@ export class Exam {
       timeMinutes: this.timeMinutes.getValue?.() ?? Number(this.timeMinutes),
       reference: this.reference,
       createdAt: this.createdAt ?? null,
+      updatedAt: this.updatedAt,
     };
 
     if (this.distribution) {
