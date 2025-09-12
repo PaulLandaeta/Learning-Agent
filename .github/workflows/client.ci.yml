@@ -12,10 +12,13 @@ on:
     paths:
       - 'client/**'
       - '.github/workflows/ci-client.yml'
-
-permissions:
-  contents: read
-
+env:
+  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
+  JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+  JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+  OPENAI_API_KEY: "fake_key"
+  AI_API_KEY: "fake_key"
+  
 jobs:
   test:
     name: Lint, Test, Build (${{ matrix.node }})
@@ -36,19 +39,19 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
 
-      - name: Install
+      - name: Install frontend deps
         working-directory: client
         run: npm ci
         
-      - name: Install backend dependencies
-        run: npm ci
+      - name: Install backend deps
         working-directory: backend
+        run: npm ci
         
       - name: Lint
         working-directory: client
         run: npm run lint --if-present
 
-      - name: Test
+      - name: Test (Jest)
         working-directory: client
         run: npm run test --if-present -- --ci --reporters=default --reporters=junit --outputFile=junit.xml || echo "test terminado"
 
@@ -56,16 +59,15 @@ jobs:
         working-directory: client
         run: npm run build --if-present
       
-      - name: Setup Docker
+      - name: Setup Docker (infra)
         working-directory: infra/docker
         run: |
           docker compose -f minio.compose.yml up -d
           docker compose -f compose.dev.yml up -d
+
       - name: Setup DB
         working-directory: backend
         run: npx prisma migrate reset --force
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
 
       - name: Seed DB
         working-directory: backend
@@ -73,10 +75,6 @@ jobs:
       
       - name: E2E (Cypress)
         uses: cypress-io/github-action@v6
-        env:
-          JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
-          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-          OPENAI_API_KEY: "fake_key"
         with:
           working-directory: client
           start: npm run start:e2e
@@ -89,6 +87,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-and-reports-${{ matrix.node }}
+          path: |
+            client/dist/**
+            client/junit.xml
           path: |
             client/dist/**
             client/junit.xml
