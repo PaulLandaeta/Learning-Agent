@@ -6,13 +6,13 @@ on:
     branches: [ main ]
     paths:
       - 'client/**'
-      - 'backend/**'  # ← AÑADIR backend
+      - 'backend/**'
       - '.github/workflows/ci-client.yml'
   push:
     branches: [ main ]
     paths:
       - 'client/**'
-      - 'backend/**'  # ← AÑADIR backend
+      - 'backend/**'
       - '.github/workflows/ci-client.yml'
 
 permissions:
@@ -59,14 +59,13 @@ jobs:
           cache: npm
           cache-dependency-path: |
             client/package-lock.json
-            backend/package-lock.json  # ← AÑADIR cache para backend
+            backend/package-lock.json
 
-      # PRIMERO instalar backend (para Prisma)
-      - name: Install backend deps
-        working-directory: backend
-        run: npm ci
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
 
-      # Configurar DB ANTES de frontend
       - name: Wait for Postgres
         run: |
           echo "Waiting for Postgres..."
@@ -80,6 +79,10 @@ jobs:
           done
           echo "Postgres never became ready"
           exit 1
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
 
       - name: Setup DB (Prisma migrate + reset)
         working-directory: backend
@@ -95,7 +98,6 @@ jobs:
           DATABASE_URL: ${{ env.DATABASE_URL }}
         run: npm run seed
 
-      # AHORA instalar y testear frontend
       - name: Install frontend deps
         working-directory: client
         run: npm ci
