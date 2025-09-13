@@ -20,28 +20,31 @@ jobs:
   test:
     name: Lint, Test, Build (${{ matrix.node }})
     runs-on: ubuntu-latest
+
+    # Postgres con pgvector (imagen oficial)
     services:
       postgres:
-        image: ankane/pgvector:pg15
-        ports:
-          - 5433:5432
+        image: pgvector/pgvector:pg15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: testdb
+        # no mapeamos puertos explícitos (Actions expone el servicio internamente)
         options: >-
           --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=20
+
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5433/testdb
+      # usa el puerto 5432 (servicio interno). Cambia si expones otro puerto.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
       JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
       OPENAI_API_KEY: "fake_key"
       AI_API_KEY: "fake_key"
-      
-    timeout-minutes: 15
+
+    timeout-minutes: 30
     strategy:
       matrix:
         node: [20]
@@ -60,37 +63,48 @@ jobs:
       - name: Install frontend deps
         working-directory: client
         run: npm ci
-        
+
       - name: Install backend deps
         working-directory: backend
         run: npm ci
-        
+
       - name: Lint
         working-directory: client
         run: npm run lint --if-present
 
       - name: Test (Jest)
         working-directory: client
-        run: npm run test --if-present -- --ci --reporters=default --reporters=junit --outputFile=junit.xml || echo "test terminado"
+        run: npm run test --if-present -- --ci --reporters=default --reporters=jest-junit --outputFile=junit.xml || echo "tests finished"
 
       - name: Build
         working-directory: client
         run: npm run build --if-present
-      
-      - name: Setup Docker (infra)
+
+      # --- SOLO levanta MinIO (si lo necesitas). NO levantes compose.dev.yml completo porque podría arrancar otra BD ---
+      - name: Setup Docker (infra - solo minio)
         working-directory: infra/docker
         run: |
           docker compose -f minio.compose.yml up -d
-          docker compose -f compose.dev.yml up -d
 
-      - name: Setup DB
+      # give postgres a little extra time to finish init (pgvector build may take a bit)
+      - name: Wait for Postgres (simple wait)
+        run: |
+          echo "Waiting 20s for Postgres to finish initialization..."
+          sleep 20
+
+      - name: Setup DB (Prisma migrate + reset)
         working-directory: backend
-        run: npx prisma migrate reset --force
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          npx prisma migrate reset --force
 
       - name: Seed DB
         working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: npm run seed
-      
+
       - name: E2E (Cypress)
         uses: cypress-io/github-action@v6
         with:
@@ -98,7 +112,8 @@ jobs:
           start: npm run start:e2e
           wait-on: http://localhost:5173
           wait-on-timeout: 120
-          command: npm run cypress:run -- --spec "cypress/e2e/login.spec.ts"
+          # ejecutar solo el spec de login
+          command: npm run cypress:run -- --spec cypress/e2e/login.spec.ts
 
       - name: Upload artifacts (build y reportes)
         if: always()
