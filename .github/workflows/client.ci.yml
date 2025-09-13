@@ -6,13 +6,13 @@ on:
     branches: [ main ]
     paths:
       - 'client/**'
-      - 'backend/**'  # ← AÑADIR backend
+      - 'backend/**'
       - '.github/workflows/ci-client.yml'
   push:
     branches: [ main ]
     paths:
       - 'client/**'
-      - 'backend/**'  # ← AÑADIR backend
+      - 'backend/**'
       - '.github/workflows/ci-client.yml'
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: pgvector/pgvector:pg15  # ← CAMBIAR A ESTA IMAGEN
+        image: pgvector/pgvector:pg15
         ports:
           - 5433:5432
         env:
@@ -59,9 +59,9 @@ jobs:
           cache: npm
           cache-dependency-path: |
             client/package-lock.json
-            backend/package-lock.json  # ← AÑADIR cache para backend
+            backend/package-lock.json
 
-      - name: Install PostgreSQL client (para verificación)
+      - name: Install PostgreSQL client
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
@@ -84,6 +84,10 @@ jobs:
         working-directory: backend
         run: npm ci
         
+      - name: Build backend (TypeScript)  # ← NUEVO STEP
+        working-directory: backend
+        run: npm run build
+        
       - name: Install frontend deps
         working-directory: client
         run: npm ci
@@ -96,7 +100,7 @@ jobs:
         working-directory: client
         run: npm run test --if-present -- --ci --reporters=default --reporters=junit --outputFile=junit.xml || echo "test terminado"
 
-      - name: Build
+      - name: Build frontend
         working-directory: client
         run: npm run build --if-present
       
@@ -104,7 +108,6 @@ jobs:
         working-directory: infra/docker
         run: |
           docker compose -f minio.compose.yml up -d
-          # NO levantar compose.dev.yml porque ya tenemos PostgreSQL
 
       - name: Setup DB (Prisma)
         working-directory: backend
@@ -114,7 +117,7 @@ jobs:
 
       - name: Seed DB
         working-directory: backend
-        run: npm run seed
+        run: npm run seed  # ← AHORA debería funcionar
       
       - name: E2E (Cypress)
         uses: cypress-io/github-action@v6
