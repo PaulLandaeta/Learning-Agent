@@ -6,11 +6,13 @@ on:
     branches: [ main ]
     paths:
       - 'client/**'
+      - 'backend/**'  # ← AÑADIR backend
       - '.github/workflows/ci-client.yml'
   push:
     branches: [ main ]
     paths:
       - 'client/**'
+      - 'backend/**'  # ← AÑADIR backend
       - '.github/workflows/ci-client.yml'
 
 permissions:
@@ -21,7 +23,6 @@ jobs:
     name: Lint, Test, Build (${{ matrix.node }})
     runs-on: ubuntu-latest
 
-    # Postgres con pgvector (imagen oficial)
     services:
       postgres:
         image: pgvector/pgvector:pg15
@@ -29,7 +30,6 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: testdb
-        # no mapeamos puertos explícitos (Actions expone el servicio internamente)
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=5s
@@ -37,7 +37,6 @@ jobs:
           --health-retries=20
 
     env:
-      # usa el puerto 5432 (servicio interno). Cambia si expones otro puerto.
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/testdb
       JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
@@ -58,14 +57,47 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: |
+            client/package-lock.json
+            backend/package-lock.json  # ← AÑADIR cache para backend
 
-      - name: Install frontend deps
-        working-directory: client
-        run: npm ci
-
+      # PRIMERO instalar backend (para Prisma)
       - name: Install backend deps
         working-directory: backend
+        run: npm ci
+
+      # Configurar DB ANTES de frontend
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for Postgres..."
+          for i in {1..30}; do
+            if pg_isready -h postgres -U postgres; then
+              echo "Postgres is ready!"
+              exit 0
+            fi
+            echo "Waiting... attempt $i"
+            sleep 2
+          done
+          echo "Postgres never became ready"
+          exit 1
+
+      - name: Setup DB (Prisma migrate + reset)
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          npx prisma generate
+          npx prisma migrate reset --force
+
+      - name: Seed DB
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: npm run seed
+
+      # AHORA instalar y testear frontend
+      - name: Install frontend deps
+        working-directory: client
         run: npm ci
 
       - name: Lint
@@ -80,35 +112,10 @@ jobs:
         working-directory: client
         run: npm run build --if-present
 
-      # --- SOLO levanta MinIO (si lo necesitas). NO levantes compose.dev.yml completo porque podría arrancar otra BD ---
-      - name: Setup Docker (infra - solo minio)
+      - name: Setup Docker (solo minio)
         working-directory: infra/docker
         run: |
           docker compose -f minio.compose.yml up -d
-
-      # give postgres a little extra time to finish init (pgvector build may take a bit)
-      - name: Wait for Postgres (simple wait)
-        run: |
-          echo "Waiting 20s for Postgres to finish initialization..."
-          sleep 20
-          
-      - name: Check DB connection
-        run: |
-          apt-get update && apt-get install -y postgresql-client
-          PGPASSWORD=postgres psql -h postgres -U postgres -d testdb -c "SELECT version();"
-
-      - name: Setup DB (Prisma migrate + reset)
-        working-directory: backend
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-        run: |
-          npx prisma migrate reset --force
-
-      - name: Seed DB
-        working-directory: backend
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-        run: npm run seed
 
       - name: E2E (Cypress)
         uses: cypress-io/github-action@v6
@@ -117,10 +124,9 @@ jobs:
           start: npm run start:e2e
           wait-on: http://localhost:5173
           wait-on-timeout: 120
-          # ejecutar solo el spec de login
           command: npm run cypress:run -- --spec cypress/e2e/login.spec.ts
 
-      - name: Upload artifacts (build y reportes)
+      - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
