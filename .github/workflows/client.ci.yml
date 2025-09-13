@@ -6,13 +6,13 @@ on:
     branches: [ main ]
     paths:
       - 'client/**'
-      - 'backend/**'
+      - 'backend/**'  # ← AÑADIR backend
       - '.github/workflows/ci-client.yml'
   push:
     branches: [ main ]
     paths:
       - 'client/**'
-      - 'backend/**'
+      - 'backend/**'  # ← AÑADIR backend
       - '.github/workflows/ci-client.yml'
 
 permissions:
@@ -22,28 +22,28 @@ jobs:
   test:
     name: Lint, Test, Build (${{ matrix.node }})
     runs-on: ubuntu-latest
-
     services:
       postgres:
-        image: pgvector/pgvector:pg15
+        image: pgvector/pgvector:pg15  # ← CAMBIAR A ESTA IMAGEN
+        ports:
+          - 5433:5432
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: testdb
         options: >-
           --health-cmd="pg_isready -U postgres"
-          --health-interval=5s
-          --health-timeout=2s
-          --health-retries=20
-
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     env:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/testdb
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5433/testdb
       JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
       OPENAI_API_KEY: "fake_key"
       AI_API_KEY: "fake_key"
-
-    timeout-minutes: 30
+      
+    timeout-minutes: 15
     strategy:
       matrix:
         node: [20]
@@ -59,9 +59,9 @@ jobs:
           cache: npm
           cache-dependency-path: |
             client/package-lock.json
-            backend/package-lock.json
+            backend/package-lock.json  # ← AÑADIR cache para backend
 
-      - name: Install PostgreSQL client
+      - name: Install PostgreSQL client (para verificación)
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
@@ -70,7 +70,7 @@ jobs:
         run: |
           echo "Waiting for Postgres..."
           for i in {1..30}; do
-            if pg_isready -h postgres -U postgres; then
+            if pg_isready -h localhost -p 5433 -U postgres; then
               echo "Postgres is ready!"
               exit 0
             fi
@@ -83,42 +83,39 @@ jobs:
       - name: Install backend deps
         working-directory: backend
         run: npm ci
-
-      - name: Setup DB (Prisma migrate + reset)
-        working-directory: backend
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-        run: |
-          npx prisma generate
-          npx prisma migrate reset --force
-
-      - name: Seed DB
-        working-directory: backend
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-        run: npm run seed
-
+        
       - name: Install frontend deps
         working-directory: client
         run: npm ci
-
+        
       - name: Lint
         working-directory: client
         run: npm run lint --if-present
 
       - name: Test (Jest)
         working-directory: client
-        run: npm run test --if-present -- --ci --reporters=default --reporters=jest-junit --outputFile=junit.xml || echo "tests finished"
+        run: npm run test --if-present -- --ci --reporters=default --reporters=junit --outputFile=junit.xml || echo "test terminado"
 
       - name: Build
         working-directory: client
         run: npm run build --if-present
-
+      
       - name: Setup Docker (solo minio)
         working-directory: infra/docker
         run: |
           docker compose -f minio.compose.yml up -d
+          # NO levantar compose.dev.yml porque ya tenemos PostgreSQL
 
+      - name: Setup DB (Prisma)
+        working-directory: backend
+        run: |
+          npx prisma generate
+          npx prisma migrate reset --force
+
+      - name: Seed DB
+        working-directory: backend
+        run: npm run seed
+      
       - name: E2E (Cypress)
         uses: cypress-io/github-action@v6
         with:
@@ -126,9 +123,9 @@ jobs:
           start: npm run start:e2e
           wait-on: http://localhost:5173
           wait-on-timeout: 120
-          command: npm run cypress:run -- --spec cypress/e2e/login.spec.ts
+          command: npm run cypress:run -- --spec "cypress/e2e/login.spec.ts"
 
-      - name: Upload artifacts
+      - name: Upload artifacts (build y reportes)
         if: always()
         uses: actions/upload-artifact@v4
         with:
