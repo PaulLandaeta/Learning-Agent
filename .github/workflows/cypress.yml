@@ -1,0 +1,126 @@
+name: E2E (Cypress)
+
+on:
+  workflow_dispatch: # ejecución manual
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+      - 'backend/**'
+      - '.github/workflows/cypress.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+      - 'backend/**'
+      - '.github/workflows/cypress.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Cypress E2E (${{ matrix.node }})
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        ports:
+          - 5433:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5433/testdb
+      JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      OPENAI_API_KEY: "fake_key"
+      AI_API_KEY: "fake_key"
+
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        node: [20]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            backend/package-lock.json
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for Postgres..."
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5433 -U postgres; then
+              echo "Postgres is ready!"
+              exit 0
+            fi
+            echo "Waiting... attempt $i"
+            sleep 2
+          done
+          echo "Postgres never became ready"
+          exit 1
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+        
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+        
+      - name: Install frontend deps
+        working-directory: client
+        run: npm ci
+        
+      - name: Setup Docker (Minio)
+        working-directory: infra/docker
+        run: docker compose -f minio.compose.yml up -d
+
+      - name: Setup DB (Prisma)
+        working-directory: backend
+        run: |
+          npx prisma generate
+          npx prisma migrate reset --force
+
+      - name: Seed DB
+        working-directory: backend
+        run: npm run seed
+
+      - name: E2E (Cypress)
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: client
+          start: npm run start:e2e
+          wait-on: http://localhost:5173
+          wait-on-timeout: 120
+          command: npm run cypress:run -- --spec cypress/e2e/login.cy.js
+
+      - name: Upload artifacts (build y reportes)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-reports-${{ matrix.node }}
+          path: |
+            client/dist/**
+            client/junit.xml
+
