@@ -38,7 +38,7 @@ jobs:
 
     env:
       # usa el puerto 5432 (servicio interno). Cambia si expones otro puerto.
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5433/testdb
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/testdb
       JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
       JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
       OPENAI_API_KEY: "fake_key"
