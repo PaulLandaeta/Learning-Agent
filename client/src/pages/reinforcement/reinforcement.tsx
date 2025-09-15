@@ -4,7 +4,7 @@ import { BookOutlined, FileTextOutlined } from "@ant-design/icons";
 import { ProgressCard } from "../../components/reinforcement/ProgressCard";
 import { CourseCards } from "../../components/reinforcement/CourseCards";
 import { ChatModal } from "../../components/reinforcement/ChatModal";
-import { useChatLogic } from "../../hooks/useChatLogic";
+import { useChatLogic } from "../../hooks/useReinforcementData";
 import { ChatFloatButton } from "../../components/reinforcement/ChatFloatButton";
 import PageTemplate from "../../components/PageTemplate";
 
@@ -19,22 +19,19 @@ export function Reinforcement() {
     ],
   };
 
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const actionButtonClass =
+    "!bg-[#1A2A80] !text-white !border-none h-9 rounded-lg font-medium px-4 shadow-md " +
+    "transition-all duration-200 ease-in-out hover:!bg-[#3B38A0] hover:shadow-xl hover:-translate-y-1";
+
   const headerActions = (
     <Space wrap>
-      <Button
-        icon={<BookOutlined />}
-        onClick={() => setIsModalOpen(true)}
-        size="middle"
-        className="!bg-[#1A2A80] !text-white !border-none h-9 rounded-lg font-medium px-4 shadow-md transition-all duration-200 ease-in-out hover:!bg-[#3B38A0] hover:shadow-xl hover:-translate-y-1"
-      >
+      <Button icon={<BookOutlined />} onClick={openModal} size="middle" className={actionButtonClass}>
         Sílabo
       </Button>
-      <Button
-        icon={<FileTextOutlined />}
-        onClick={() => setIsModalOpen(true)}
-        size="middle"
-        className="!bg-[#1A2A80] !text-white !border-none h-9 rounded-lg font-medium px-4 shadow-md transition-all duration-200 ease-in-out hover:!bg-[#3B38A0] hover:shadow-xl hover:-translate-y-1"
-      >
+      <Button icon={<FileTextOutlined />} onClick={openModal} size="middle" className={actionButtonClass}>
         Documentos
       </Button>
     </Space>
@@ -45,13 +42,14 @@ export function Reinforcement() {
       title="Refuerzo"
       subtitle="Selecciona una categoría para practicar"
       actions={headerActions}
-      breadcrumbs={[{ label: "Inicio", href: "/" }, { label: "Refuerzo" }]}
+      breadcrumbs={[
+        { label: "Inicio", href: "/" },
+        { label: "Refuerzo" },
+      ]}
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid gap-3">
-          <div className="mb-2">
-            <ProgressCard />
-          </div>
+          <ProgressCard />
           <div className="pt-2">
             <CourseCards courses={studentActivities.courses} />
           </div>
@@ -63,9 +61,13 @@ export function Reinforcement() {
       <Modal
         title="Funcionalidad en desarrollo"
         open={isModalOpen}
-        onOk={() => setIsModalOpen(false)}
-        onCancel={() => setIsModalOpen(false)}
-        footer={[<Button key="back" onClick={() => setIsModalOpen(false)}>Cerrar</Button>]}
+        onOk={closeModal}
+        onCancel={closeModal}
+        footer={[
+          <Button key="back" onClick={closeModal}>
+            Cerrar
+          </Button>,
+        ]}
       >
         <p>Esta funcionalidad aún está en desarrollo y estará disponible pronto.</p>
       </Modal>
