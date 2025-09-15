@@ -1,20 +1,25 @@
 import { useState } from "react";
-import { Button, Modal } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
-import PageTemplate from "../../components/PageTemplate";
-import { useThemeStore } from "../../store/themeStore";
+import { Button, Modal } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import PageTemplate from '../../components/PageTemplate';
+import useInterviewFlow from '../../hooks/usInterviewFlow';
+import OpenQuestion from '../../components/interview/OpenQuestion';
+import TeoricQuestion from '../../components/interview/TeoricQuestion';
+import MultipleQuestion from '../../components/interview/MultipleQuestion';
+import { useThemeStore } from '../../store/themeStore';
+import InterviewFeedbackModal from '../../components/interview/InterviewFeedbackModal';
+import type { DoubleOptionResponse, MultipleSelectionResponse } from '../../interfaces/interviewInt';
+import { usePdfGenerator } from '../../hooks/usePdfGenerator';
 import InterviewModal from "../../components/interview/InterviewModal";
-import InterviewFeedbackModal from "../../components/interview/InterviewFeedbackModal";
-import OpenQuestion from "../../components/interview/OpenQuestion";
-import TeoricQuestion from "../../components/interview/TeoricQuestion";
-import MultipleQuestion from "../../components/interview/MultipleQuestion";
 import { useStudentInterview } from "../../hooks/useStudentInterview";
 
 const InterviewPage: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useThemeStore();
-
+  const { currentType, isModalOpen, next, finish, confirmFinish, setIsModalOpen } = useInterviewFlow(['open', 'teoric', 'multiple', 'open']);
+   const [selectedValues, setSelectedValues] = useState<DoubleOptionResponse[]>([]);
+   const [mulSelectedValues, setMulSelectedValues] = useState<MultipleSelectionResponse[]>([]);
   const {
     isInterviewModalOpen,
     closeInterviewModal,
@@ -27,6 +32,7 @@ const InterviewPage: React.FC = () => {
 
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const { generatePDF } = usePdfGenerator();
 
   const handleFinish = () => {
     setIsFinishModalOpen(true);
@@ -37,16 +43,23 @@ const InterviewPage: React.FC = () => {
     setShowFeedback(true);
   };
 
-  const handleDownloadFeedback = () => {
-    console.log("Descargando feedback...");
+  const handleDownloadFeedback = async () => {
+    try {
+      console.log("Descargando feedback...");
+      // Combinar ambos tipos de datos
+      const allData = [...mulSelectedValues, ...selectedValues];
+      await generatePDF(allData);
+    } catch (error) {
+      console.error('Error al descargar el PDF:', error);
+    }
   };
 
   const renderQuestion = () => {
     switch (questionType) {
       case "multiple":
-        return <MultipleQuestion onNext={nextQuestion} />;
+        return <MultipleQuestion onNext={nextQuestion} selectedValues={selectedValues} setSelectedValues={setSelectedValues}  />;
       case "truefalse":
-        return <TeoricQuestion onNext={nextQuestion} />;
+        return <TeoricQuestion onNext={nextQuestion}selectedValues={mulSelectedValues} setSelectedValues={setMulSelectedValues}/>;
       default:
         return <OpenQuestion onNext={nextQuestion} />;
     }
@@ -121,6 +134,8 @@ const InterviewPage: React.FC = () => {
         open={showFeedback}
         onClose={() => setShowFeedback(false)}
         onDownload={handleDownloadFeedback}
+        multipleSelectionData={mulSelectedValues} // Tus preguntas teóricas
+        doubleOptionData={selectedValues}
       />
     </>
   );

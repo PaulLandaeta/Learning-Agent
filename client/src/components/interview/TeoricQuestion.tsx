@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
-import { Radio, Button, Typography, theme } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Typography, theme, Radio } from 'antd';
 import { RightOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import apiClient from '../../api/apiClient';
+import type { MultipleSelectionResponse } from '../../interfaces/interviewInt';
 import InterviewRunner from './InterviewRunner';
 
 const { Paragraph, Text } = Typography;
@@ -11,30 +12,31 @@ const HEIGHT = '60vh';
 const TOP_OFFSET = '5vh';
 
 interface TeoricQuestionProps {
-  onNext: () => void;
-}
-interface MultipleSelectionResponse {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
+   onNext: () => void;
+   selectedValues: MultipleSelectionResponse[];
+   setSelectedValues: React.Dispatch<React.SetStateAction<MultipleSelectionResponse[]>>;
 }
 
-export default function TeoricQuestion({ onNext }: TeoricQuestionProps) {
+export default function TeoricQuestion({ onNext, selectedValues, setSelectedValues }: TeoricQuestionProps) {
   const { token } = theme.useToken();
-  const [selectedValue, setSelectedValue] = useState<string>('');
   const [mulOption, setMulOption] = useState<MultipleSelectionResponse>();
   const [loading, setLoading] = useState(true);
   const hasFetched = useRef(false);
+  const onClick = () => {
+    setSelectedValues( sel => [...sel, mulOption!]);
+    console.log(selectedValues);
+    onNext();
+  }
+  
 
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
     fetchQuestion();
-  }, []);
-
+  }, [selectedValues]);
   async function fetchQuestion() {
     try {
+      setMulOption(undefined);
       const response = await apiClient.get("/chatint/multipleSelection?topico=fisica");
       const obj = response.data as MultipleSelectionResponse;
       setMulOption(obj);
@@ -44,6 +46,7 @@ export default function TeoricQuestion({ onNext }: TeoricQuestionProps) {
       setLoading(false);
     }
   }
+
 
   if (loading) return <InterviewRunner loading={true} />;
   if (!mulOption) return null;
@@ -121,13 +124,12 @@ export default function TeoricQuestion({ onNext }: TeoricQuestionProps) {
               gap: token.marginMD,
               justifyContent: 'center',
             }}
-            value={selectedValue}
-            onChange={(e) => setSelectedValue(e.target.value)}
+            onChange={(e) => setMulOption(old => old != undefined ? {...old, givenAnswer:e.target.value}:undefined)}
           >
             {mulOption.options.map((option, i) => {
-              const selected = selectedValue === option;
+              const selected = mulOption.givenAnswer == i;
               return (
-                <Radio key={i} value={option} style={{ margin: 0 }}>
+                <Radio key={i} value={i} style={{ margin: 0 }}>
                   <div
                     style={{
                       width: 320,
@@ -135,7 +137,7 @@ export default function TeoricQuestion({ onNext }: TeoricQuestionProps) {
                       borderRadius: token.borderRadiusLG,
                       border: `2px solid ${selected ? token.colorPrimary : token.colorBorderSecondary}`,
                       backgroundColor: token.colorBgContainer,
-                      boxShadow: selected
+                      boxShadow: selected 
                         ? `0 4px 12px ${token.colorPrimary}33`
                         : token.boxShadowSecondary,
                       cursor: 'pointer',
@@ -161,7 +163,7 @@ export default function TeoricQuestion({ onNext }: TeoricQuestionProps) {
         </div>
       </div>
 
-      {selectedValue && (
+      {mulOption.givenAnswer != undefined && (
         <div
           style={{
             width: WIDTH,
@@ -174,7 +176,7 @@ export default function TeoricQuestion({ onNext }: TeoricQuestionProps) {
           <Button
             type="primary"
             size="large"
-            onClick={onNext}
+            onClick={onClick}
             style={{
               borderRadius: token.borderRadiusLG,
               height: 48,
