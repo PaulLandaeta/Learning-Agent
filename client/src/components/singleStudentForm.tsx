@@ -1,38 +1,50 @@
-import { Modal, Form, Input, Button } from 'antd';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-
+import { Modal, Form, Input, Button } from "antd";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 interface UploadStudentFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: { studentName: string; studentLastname: string; studentCode: string }) => void;
+  onSubmit: (values: {
+    studentName: string;
+    studentLastname: string;
+    studentCode: string;
+  }) => void;
 }
 
-export const SingleStudentForm = ({ open, onClose, onSubmit }: UploadStudentFormProps
-) => {
+export const SingleStudentForm = ({
+  open,
+  onClose,
+  onSubmit,
+}: UploadStudentFormProps) => {
   const validationSchema = Yup.object().shape({
     studentName: Yup.string()
-      .required('Nombre requerido')
-      .matches(/^[^!@$%^&*?{}|<>]*$/, "El nombre no puede contener caracteres especiales")
-      .matches(/^[^0-9]*$/, "El nombre no puede contener números")
+      .required("Nombre requerido")
+      .matches(
+        /^(?=.*[a-zA-ZÁÉÍÓÚáéíóúñÑ])[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]*$/,
+        "El nombre solo puede contener letras"
+      )
       .max(30, "El nombre no puede tener más de 30 caracteres"),
+
     studentLastname: Yup.string()
-      .required('Apellido requerido')
-      .matches(/^[^!@$%^&*?{}|<>]*$/, "El apellido no puede contener caracteres especiales")
-      .matches(/^[^0-9]*$/, "El apellido no puede contener números")
+      .required("Apellido requerido")
+      .matches(
+        /^(?=.*[a-zA-ZÁÉÍÓÚáéíóúñÑ])[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]*$/,
+        "El apellido solo puede contener letras"
+      )
       .max(30, "El apellido no puede tener más de 30 caracteres"),
+
     studentCode: Yup.string()
-      .required('Código de estudiante requerido')
-      .matches(/^[^!@$%^&*?{}|<>]*$/, "El código no puede contener caracteres especiales")
-      .max(8, "El código no puede tener más de 8 dígitos")
+      .required("Código de estudiante requerido")
+      .matches(/^\d+$/, "El código solo puede contener números")
+      .max(8, "El código no puede tener más de 8 dígitos"),
   });
 
   const formik = useFormik({
     initialValues: {
-      studentName: '',
-      studentLastname: '',
-      studentCode: '',
+      studentName: "",
+      studentLastname: "",
+      studentCode: "",
     },
     validationSchema,
     validateOnChange: true,
@@ -41,34 +53,51 @@ export const SingleStudentForm = ({ open, onClose, onSubmit }: UploadStudentForm
       onSubmit(values);
       resetForm();
       onClose();
-    }
+    },
   });
 
   const handleCancel = () => {
     formik.resetForm();
     onClose();
-  }
+  };
 
   const handleSubmit = () => {
-    formik.handleSubmit()
-  }
+    formik.handleSubmit();
+  };
 
   return (
-    <Modal open={open} onCancel={handleCancel} onOk={() => { }}
+    <Modal
+      open={open}
+      onCancel={handleCancel}
+      onOk={() => {}}
       footer={[
         <Button key="cancel" danger onClick={handleCancel}>
           Cancelar
         </Button>,
         <Button type="primary" onClick={handleSubmit}>
           Inscribir estudiante
-        </Button>
+        </Button>,
       ]}
-      centered title="Añadir Estudiante">
-      <Form layout="vertical" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+      centered
+      title="Añadir Estudiante"
+    >
+      <Form
+        layout="vertical"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+        }}
+      >
         <Form.Item
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
           label="Nombre"
-          validateStatus={formik.errors.studentName && formik.touched.studentName ? 'error' : ''}
+          validateStatus={
+            formik.errors.studentName && formik.touched.studentName
+              ? "error"
+              : ""
+          }
           help={formik.touched.studentName && formik.errors.studentName}
         >
           <Input
@@ -84,9 +113,13 @@ export const SingleStudentForm = ({ open, onClose, onSubmit }: UploadStudentForm
           />
         </Form.Item>
         <Form.Item
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
           label="Apellido"
-          validateStatus={formik.errors.studentLastname && formik.touched.studentLastname ? 'error' : ''}
+          validateStatus={
+            formik.errors.studentLastname && formik.touched.studentLastname
+              ? "error"
+              : ""
+          }
           help={formik.touched.studentLastname && formik.errors.studentLastname}
         >
           <Input
@@ -102,9 +135,13 @@ export const SingleStudentForm = ({ open, onClose, onSubmit }: UploadStudentForm
           />
         </Form.Item>
         <Form.Item
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
           label="Código UPB"
-          validateStatus={formik.errors.studentCode && formik.touched.studentCode ? 'error' : ''}
+          validateStatus={
+            formik.errors.studentCode && formik.touched.studentCode
+              ? "error"
+              : ""
+          }
           help={formik.touched.studentCode && formik.errors.studentCode}
         >
           <Input
