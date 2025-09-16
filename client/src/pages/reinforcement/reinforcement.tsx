@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal, Space, Button } from "antd";
-import { BookOutlined, FileTextOutlined } from "@ant-design/icons";
+import { BookOutlined } from "@ant-design/icons";
 import { ProgressCard } from "../../components/reinforcement/ProgressCard";
 import { CourseCards } from "../../components/reinforcement/CourseCards";
 import { ChatModal } from "../../components/reinforcement/ChatModal";
@@ -14,8 +14,8 @@ export function Reinforcement() {
 
   const studentActivities = {
     courses: [
-      { id: "test", title: "Exámenes", description: "Preparación para exámenes y evaluaciones" },
-      { id: "interview", title: "Entrevistas", description: "Preparación para entrevistas de trabajo" },
+      { id: "test", title: "Exams", description: "Preparation for exams and evaluations" },
+      { id: "interview", title: "Interviews", description: "Preparation for job interviews" },
     ],
   };
 
@@ -28,23 +28,27 @@ export function Reinforcement() {
 
   const headerActions = (
     <Space wrap>
+
       <Button icon={<BookOutlined />} onClick={openModal} size="middle" className={actionButtonClass}>
         Sílabo
       </Button>
       <Button icon={<FileTextOutlined />} onClick={openModal} size="middle" className={actionButtonClass}>
         Documentos
+
       </Button>
     </Space>
   );
 
   return (
     <PageTemplate
-      title="Refuerzo"
-      subtitle="Selecciona una categoría para practicar"
+      title="Reinforcement"
+      subtitle="Select a category to practice"
       actions={headerActions}
       breadcrumbs={[
+
         { label: "Inicio", href: "/" },
         { label: "Refuerzo" },
+
       ]}
     >
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,8 +63,9 @@ export function Reinforcement() {
       <ChatFloatButton onClick={handleChatClick} />
 
       <Modal
-        title="Funcionalidad en desarrollo"
+        title="Feature in development"
         open={isModalOpen}
+
         onOk={closeModal}
         onCancel={closeModal}
         footer={[
@@ -68,8 +73,9 @@ export function Reinforcement() {
             Cerrar
           </Button>,
         ]}
+
       >
-        <p>Esta funcionalidad aún está en desarrollo y estará disponible pronto.</p>
+        <p>This feature is still in development and will be available soon.</p>
       </Modal>
 
       <ChatModal isChatOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />

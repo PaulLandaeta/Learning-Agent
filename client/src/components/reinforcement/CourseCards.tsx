@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col, Typography } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { BookOutlined } from "@ant-design/icons";
 import { CustomCard } from "../../components/shared/CustomCard";
 
@@ -21,6 +21,7 @@ interface CourseCardsProps {
   descriptionFontSize?: string | number;
 }
 
+
 export const CourseCards: React.FC<CourseCardsProps> = ({
   courses,
   gutter = [24, 24],
@@ -34,6 +35,7 @@ export const CourseCards: React.FC<CourseCardsProps> = ({
     {courses.map((course) => (
       <Col xs={24} md={12} key={course.id}>
         <Link to={`/${course.id}`} className="no-underline">
+
           <CustomCard
             style={{
               maxWidth: cardMaxWidth,
@@ -66,5 +68,6 @@ export const CourseCards: React.FC<CourseCardsProps> = ({
         </Link>
       </Col>
     ))}
-  </Row>
-);
+    </Row>
+  );
+};
