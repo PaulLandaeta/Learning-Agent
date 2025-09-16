@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { Button, Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -12,10 +13,12 @@ import InterviewFeedbackModal from '../../components/interview/InterviewFeedback
 import type { DoubleOptionResponse, MultipleSelectionResponse } from '../../interfaces/interviewInt';
 import { usePdfGenerator } from '../../hooks/usePdfGenerator';
 import InterviewModal from "../../components/interview/InterviewModal";
+
 import { useStudentInterview } from "../../hooks/useStudentInterview";
 
 const InterviewPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { theme } = useThemeStore();
   const { currentType, isModalOpen, next, finish, confirmFinish, setIsModalOpen } = useInterviewFlow(['open', 'teoric', 'multiple', 'open']);
    const [selectedValues, setSelectedValues] = useState<DoubleOptionResponse[]>([]);
@@ -41,6 +44,7 @@ const InterviewPage: React.FC = () => {
   const handleConfirmFinish = () => {
     setIsFinishModalOpen(false);
     setShowFeedback(true);
+    navigate(`/student/classes/${id}/reinforcement`);
   };
 
   const handleDownloadFeedback = async () => {
@@ -69,8 +73,10 @@ const InterviewPage: React.FC = () => {
     <>
       <PageTemplate
         breadcrumbs={[
-          { label: "Reforzamiento", href: "/reinforcement" },
-          { label: "Entrevista" },
+          { label: "Home", href: "/" },
+          { label: "Classes", href: "/student/classes" },
+          { label: "Reinforcement", href: `/student/classes/${id}/reinforcement` },
+          { label: "Interview" },
         ]}
         title={
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -98,11 +104,7 @@ const InterviewPage: React.FC = () => {
               icon={<CloseOutlined />}
               onClick={handleFinish}
               type="primary"
-              className={
-                theme === "dark"
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }
+              className="bg-primary text-white hover:bg-primary/90"
             >
               Finalizar
             </Button>
