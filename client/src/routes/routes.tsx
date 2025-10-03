@@ -9,14 +9,14 @@ import { Reinforcement } from "../pages/student/reinforcement/reinforcement";
 import Test from "../pages/student/reinforcement/test";
 import PeriodDetailPage from "../pages/periods-classes/PeriodDetailPage";
 import CoursePeriodsPage from "../pages/courses/CoursePeriodsPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
+import DashboardPage from "../pages/common/DashboardPage";
 import ExamsCreatePage from "../pages/exams/ExamCreatePage";
 import ExamManagementPage from "../pages/exams/ExamManagementPage";
-import ForgotPasswordPage from "../pages/ForgotPassword";
-import Login from "../pages/Login";
-import SettingsPage from "../pages/settings/SettingsPage";
+import ForgotPasswordPage from "../pages/common/ForgotPassword";
+import Login from "../pages/common/Login";
+import SettingsPage from "../pages/common/SettingsPage";
 import CoursesPage from "../pages/courses/CoursesPage";
-import UploadDocumentPage from "../pages/documents/UploadDocumentPage";
+import UploadDocumentPage from "../pages/common/UploadDocumentPage";
 
 export const AppRoutes = () => {
   return (
