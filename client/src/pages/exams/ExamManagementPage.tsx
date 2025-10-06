@@ -1,8 +1,8 @@
 import { Card, Typography, theme } from 'antd';
-import ExamTable from '../../../components/exams/ExamTable';
-import { useExamsStore } from '../../../store/examsStore';
-import PageTemplate from '../../../components/PageTemplate';
-import GlobalScrollbar from '../../../components/GlobalScrollbar'; 
+import ExamTable from '../../components/exams/ExamTable';
+import { useExamsStore } from '../../store/examsStore';
+import PageTemplate from '../../components/PageTemplate';
+import GlobalScrollbar from '../../components/GlobalScrollbar'; 
 
 const { Title, Text } = Typography;
 
