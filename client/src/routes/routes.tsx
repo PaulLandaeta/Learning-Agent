@@ -1,23 +1,23 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ClassMenu } from "../pages/academic_management/ClassesMenu";
-import { StudentsByClass } from "../pages/professor/academic_management/StudentsByClass";
+import { StudentsByClass } from "../pages/academic_management/StudentsByClass";
 import { Reinforcement } from "../pages/reinforcement/reinforcement";
 import Test from "../pages/reinforcement/test";
 import Interview from "../pages/reinforcement/interview";
 import Login from "../pages/Login";
 import ForgotPasswordPage from "../pages/ForgotPassword";
-import ExamsCreatePage from "../pages/professor/exams/ExamCreatePage";
-import ExamManagementPage from "../pages/professor/exams/ExamManagementPage";
+import ExamsCreatePage from "../pages/exams/ExamCreatePage";
+import ExamManagementPage from "../pages/exams/ExamManagementPage";
 import UploadDocumentPage from "../pages/documents/UploadDocumentPage";
-import { CourseDetailPage } from "../pages/professor/academic_management/CourseDetailPage";
+import { CourseDetailPage } from "../pages/academic_management/CourseDetailPage";
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
 import RoleRoute from "./RoleRoute";
 import AppLayout from "../layouts/AppLayout";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import SettingsPage from "../pages/settings/SettingsPage";
-import { TeacherCoursePage } from "../pages/professor/academic_management/TeacherCoursePage";
-import { CoursePeriodsPage } from "../pages/professor/academic_management/CoursePeriodsPage";
+import { TeacherCoursePage } from "../pages/courses/TeacherCoursePage";
+import { CoursePeriodsPage } from "../pages/courses/CoursePeriodsPage";
 export const AppRoutes = () => {
   return (
     <BrowserRouter>
