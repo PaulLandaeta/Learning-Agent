@@ -2,15 +2,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { Button,  Empty, Input, message } from "antd";
 import { PlusOutlined, ReadOutlined } from "@ant-design/icons";
-import PageTemplate from "../../components/PageTemplate";
-import { CreatePeriodForm } from "../../components/CreatePeriodForm";
-import useClasses from "../../hooks/useClasses";
-import type { Clase, CreateClassDTO } from "../../interfaces/claseInterface";
-import { useUserStore } from "../../store/userStore";
+import PageTemplate from "../../../components/PageTemplate";
+import { CreatePeriodForm } from "../../../components/CreatePeriodForm";
+import useClasses from "../../../hooks/useClasses";
+import type { Clase, CreateClassDTO } from "../../../interfaces/claseInterface";
+import { useUserStore } from "../../../store/userStore";
+import AccessDenied from "../../../components/shared/AccessDenied";
+import CustomCard from "../../../components/shared/CustomCard";
+import useCourses from "../../../hooks/useCourses";
 import dayjs from "dayjs";
-import AccessDenied from "../../components/shared/AccessDenied";
-import CustomCard from "../../components/shared/CustomCard";
-import useCourses from "../../hooks/useCourses";
+
+
 
 export function CoursePeriodsPage() {
   const { courseId } = useParams<{ courseId: string }>();

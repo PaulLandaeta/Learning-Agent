@@ -11,27 +11,27 @@ import {
   BookOutlined,
   BarChartOutlined,
 } from "@ant-design/icons";
-import useClasses from "../../hooks/useClasses";
-import useTeacher from "../../hooks/useTeacher";
-import PageTemplate from "../../components/PageTemplate";
-import { CursosForm } from "../../components/cursosForm";
-import { SafetyModal } from "../../components/safetyModal";
-import { SingleStudentForm } from "../../components/singleStudentForm";
-import StudentPreviewModal from "../../components/StudentPreviewModal";
-import type { Clase } from "../../interfaces/claseInterface";
+import useClasses from "../../../hooks/useClasses";
+import useTeacher from "../../../hooks/useTeacher";
+import PageTemplate from "../../../components/PageTemplate";
+import { CursosForm } from "../../../components/cursosForm";
+import { SafetyModal } from "../../../components/safetyModal";
+import { SingleStudentForm } from "../../../components/singleStudentForm";
+import StudentPreviewModal from "../../../components/StudentPreviewModal";
+import type { Clase } from "../../../interfaces/claseInterface";
 import type {
   createEnrollmentInterface,
   EnrollGroupRow,
-} from "../../interfaces/enrollmentInterface";
-import useEnrollment from "../../hooks/useEnrollment";
+} from "../../../interfaces/enrollmentInterface";
+import useEnrollment from "../../../hooks/useEnrollment";
 import dayjs from "dayjs";
-import useStudents from "../../hooks/useStudents";
-import { useUserStore } from "../../store/userStore";
-import useCourses from "../../hooks/useCourses";
-import UploadButton from '../../components/shared/UploadButton';
-import { processFile } from "../../utils/enrollGroupByFile";
-import type { StudentInfo } from "../../interfaces/studentInterface";
-import CourseExamsPanel from "../courses/CourseExamsPanel";
+import useStudents from "../../../hooks/useStudents";
+import { useUserStore } from "../../../store/userStore";
+import useCourses from "../../../hooks/useCourses";
+import UploadButton from '../../../components/shared/UploadButton';
+import { processFile } from "../../../utils/enrollGroupByFile";
+import type { StudentInfo } from "../../../interfaces/studentInterface";
+import CourseExamsPanel from "../../courses/CourseExamsPanel";
 
 const { Text } = Typography;
 const { TabPane } = Tabs;

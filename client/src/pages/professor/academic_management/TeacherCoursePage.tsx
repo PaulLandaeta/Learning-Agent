@@ -1,14 +1,14 @@
 import { Button, Empty, Space, Input, message } from "antd";
-import PageTemplate from "../../components/PageTemplate";
+import PageTemplate from "../../../components/PageTemplate";
 import { useCallback, useEffect, useState } from "react";
-import useCourses from "../../hooks/useCourses";
-import type { Course, CreateCourseDTO } from "../../interfaces/courseInterface";
+import useCourses from "../../../hooks/useCourses";
+import type { Course, CreateCourseDTO } from "../../../interfaces/courseInterface";
 import { useNavigate } from "react-router-dom";
-import { CreateCourseForm } from "./CreateCourseForm";
+import { CreateCourseForm } from "../../courses/CreateCourseForm";
 import { PlusOutlined, SolutionOutlined } from "@ant-design/icons";
-import { useUserStore } from "../../store/userStore";
-import AccessDenied from "../../components/shared/AccessDenied";
-import CustomCard from "../../components/shared/CustomCard";
+import { useUserStore } from "../../../store/userStore";
+import AccessDenied from "../../../components/shared/AccessDenied";
+import CustomCard from "../../../components/shared/CustomCard";
 
 export function TeacherCoursePage() {
   const user = useUserStore((s) => s.user);
