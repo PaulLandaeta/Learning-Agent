@@ -14,7 +14,11 @@ export class EnvConfigAdapter implements ConfigPort {
     return this.configService.get<string>('JWT_REFRESH_TTL', '7d');
   }
 
-  getJwtSecret(): string {
-    return this.configService.getOrThrow<string>('JWT_SECRET');
+  getJwtAccessSecret(): string {
+    return this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+  }
+
+  getJwtRefreshSecret(): string {
+    return this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
   }
 }

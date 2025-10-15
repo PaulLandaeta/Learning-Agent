@@ -4,6 +4,8 @@ export interface ConfigPort {
 
   getJwtRefreshTTL(): string;
 
-  getJwtSecret(): string;
+  getJwtAccessSecret(): string;
+
+  getJwtRefreshSecret(): string;
 
 }
