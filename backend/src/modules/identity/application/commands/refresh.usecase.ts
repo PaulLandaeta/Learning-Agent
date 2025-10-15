@@ -2,7 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { SessionRepositoryPort } from '../../domain/ports/session.repository.port';
 import type { TokenServicePort } from '../../domain/ports/token-service.port';
 import type { TokenExpirationService } from '../../domain/services/token-expiration.service';
-import { SESSION_REPO, TOKEN_SERVICE, TOKEN_EXPIRATION_SERVICE } from '../../tokens';
+import type { ConfigPort } from '../../domain/ports/config.port';
+import { SESSION_REPO, TOKEN_SERVICE, TOKEN_EXPIRATION_SERVICE, CONFIG_PORT } from '../../tokens';
 
 @Injectable()
 export class RefreshUseCase {
@@ -10,6 +11,7 @@ export class RefreshUseCase {
     @Inject(SESSION_REPO) private readonly sessions: SessionRepositoryPort,
     @Inject(TOKEN_SERVICE) private readonly tokens: TokenServicePort,
     @Inject(TOKEN_EXPIRATION_SERVICE) private readonly tokenExpiration: TokenExpirationService,
+    @Inject(CONFIG_PORT) private readonly config: ConfigPort,
   ) {}
 
   async execute(input: { refreshToken: string }) {
@@ -38,7 +40,7 @@ export class RefreshUseCase {
       email: payload.email,
     });
 
-    const refreshTTL = process.env.JWT_REFRESH_TTL || '7d';
+    const refreshTTL = this.config.getJwtRefreshTTL();
     const { expiresAt } = this.tokenExpiration.calculateExpiration(refreshTTL);
 
     await this.sessions.createSession({
