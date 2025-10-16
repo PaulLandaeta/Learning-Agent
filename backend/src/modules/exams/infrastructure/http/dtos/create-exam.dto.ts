@@ -1,4 +1,7 @@
-import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, ValidateNested } from 'class-validator';
+import {
+  IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID,
+  Max, MaxLength, Min, ValidateNested
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class DistributionDTO {
@@ -9,27 +12,34 @@ class DistributionDTO {
 }
 
 export class CreateExamDto {
-  @IsString() @MaxLength(120)
+  @IsString({ message: 'title debe ser texto' })
+  @IsNotEmpty({ message: 'title es obligatorio' })
+  @MaxLength(120)
   title!: string;
 
-  @IsUUID()
+  @IsUUID('4', { message: 'classId debe ser UUID v4' })
   classId!: string;
 
-  @IsString() @MaxLength(200)
+  @IsString()
+  @IsNotEmpty({ message: 'subject es obligatorio' })
+  @MaxLength(200)
   subject!: string;
 
   @IsString()
+  @IsNotEmpty({ message: 'difficulty es obligatorio' })
   difficulty!: string;
 
-  @IsInt() @Min(1) @Max(10)
+  @IsInt()
+  @Min(1) @Max(10)
   attempts!: number;
 
-  @IsInt() @Min(1) @Max(1000)
+  @IsInt()
+  @Min(1) @Max(1000)
   totalQuestions!: number;
 
   @IsInt()
-  @Min(45, { message: 'Tiempo (minutos) mínimo: 45.' })
-  @Max(240, { message: 'Tiempo (minutos) máximo: 240.' })
+  @Min(45, { message: 'Mínimo 45 minutos' })
+  @Max(240, { message: 'Máximo 240 minutos' })
   timeMinutes!: number;
 
   @IsOptional() @IsString() @MaxLength(2000)
@@ -38,6 +48,9 @@ export class CreateExamDto {
   @IsOptional() @ValidateNested() @Type(() => DistributionDTO)
   distribution?: DistributionDTO;
 
-  @IsOptional() @IsEnum(['Guardado', 'Publicado'] as const)
+  @IsOptional()
+  @IsEnum(['Guardado', 'Publicado'] as const, {
+    message: 'status debe ser Guardado o Publicado'
+  })
   status?: 'Guardado' | 'Publicado';
 }
