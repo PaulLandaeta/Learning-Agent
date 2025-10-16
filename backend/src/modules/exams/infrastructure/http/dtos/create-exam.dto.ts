@@ -1,7 +1,9 @@
+
 import {
   IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID,
   Max, MaxLength, Min, ValidateNested
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 
 class DistributionDTO {
@@ -12,12 +14,14 @@ class DistributionDTO {
 }
 
 export class CreateExamDto {
+
   @IsString({ message: 'title debe ser texto' })
   @IsNotEmpty({ message: 'title es obligatorio' })
   @MaxLength(120)
   title!: string;
 
   @IsUUID('4', { message: 'classId debe ser UUID v4' })
+
   classId!: string;
 
   @IsString()
