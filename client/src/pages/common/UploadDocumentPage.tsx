@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Row, Col, Grid } from "antd";
+import { Card, Row, Col } from "antd";
 import { FileTextOutlined } from "@ant-design/icons";
 import PageTemplate from "../../components/PageTemplate";
 import ChunkedUploadButton from "../../components/shared/ChunkedUploadButton";
@@ -8,8 +8,6 @@ import { PdfPreviewSidebar } from "../../components/documents/PdfPreviewSidebar"
 import { DocumentDataSidebar } from "../../components/documents/DocumentDataSidebar";
 import { useUploadDocumentPage } from "../../hooks/useUploadDocumentPage";
 import { palette } from "../../theme";
-
-const { useBreakpoint } = Grid;
 
 const UploadDocumentPage: React.FC = () => {
   const {
