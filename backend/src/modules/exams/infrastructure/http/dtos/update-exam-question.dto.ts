@@ -5,19 +5,19 @@ export class UpdateExamQuestionDto {
   @IsOptional()
   kind!: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'OPEN_ANALYSIS' | 'OPEN_EXERCISE';
 
-  @IsOptional() @IsString() @MaxLength(4000)
+  @IsOptional() @IsString({ message: 'text debe ser texto' }) @MaxLength(4000)
   text?: string;
 
-  @IsOptional() @IsArray()
+  @IsOptional() @IsArray({ message: 'options debe ser un arreglo' })
   options?: string[];
 
-  @IsOptional() @IsInt()
+  @IsOptional() @IsInt({ message: 'correctOptionIndex debe ser entero' })
   correctOptionIndex?: number;
 
-  @IsOptional() @IsBoolean()
+  @IsOptional() @IsBoolean({ message: 'correctBoolean debe ser booleano' })
   correctBoolean?: boolean;
 
-  @IsOptional() @IsString()
+  @IsOptional() @IsString({ message: 'expectedAnswer debe ser texto' })
   expectedAnswer?: string;
 
   @IsOptional()
