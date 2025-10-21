@@ -1,42 +1,69 @@
-import { CreatePermissionUseCase } from './create-permission.usecase';
-import type { PermissionRepositoryPort } from '../../domain/ports/permission.repository.port';
-import { Permission } from '../../domain/entities/permission.entity';
+import { Test, TestingModule } from '@nestjs/testing';
+import { CreateRoleUseCase } from './create-role.usecase';
+import { ROLE_REPO } from '../../tokens';
+import { RoleRepositoryPort } from '../../domain/ports/role.repository.port';
 
-describe('CreatePermissionUseCase', () => {
-  function makeRepoMock(overrides: Partial<PermissionRepositoryPort> = {}): PermissionRepositoryPort {
-    return {
-      findById: jest.fn(),
-      findByActionResource: jest.fn(),
-      create: jest.fn(),
-      list: jest.fn(),
-      ...overrides,
-    } as unknown as PermissionRepositoryPort;
-  }
+describe('CreateRoleUseCase (transaction test)', () => {
+  let useCase: CreateRoleUseCase;
+  let mockRoleRepo: jest.Mocked<RoleRepositoryPort>;
 
-  it('creates a permission when not existing', async () => {
-    const repo = makeRepoMock({
-      findByActionResource: jest.fn().mockResolvedValue(null),
-      create: jest
-        .fn()
-        .mockImplementation(async (action: string, resource: string, description?: string | null) => new Permission('p1', action, resource, description ?? null)),
-    });
-    const usecase = new CreatePermissionUseCase(repo);
-    const result = await usecase.execute({ action: 'read', resource: 'document', description: 'read documents' });
+  beforeEach(async () => {
+    mockRoleRepo = {
+      createWithPermissions: jest.fn(),
+    } as any;
 
-    expect(repo.findByActionResource).toHaveBeenCalledWith('read', 'document');
-    expect(repo.create).toHaveBeenCalledWith('read', 'document', 'read documents');
-    expect(result).toEqual(new Permission('p1', 'read', 'document', 'read documents'));
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CreateRoleUseCase,
+        { provide: ROLE_REPO, useValue: mockRoleRepo },
+      ],
+    }).compile();
+
+    useCase = module.get(CreateRoleUseCase);
   });
 
-  it('throws if permission already exists', async () => {
-    const existing = new Permission('p0', 'read', 'document', 'existing');
-    const repo = makeRepoMock({
-      findByActionResource: jest.fn().mockResolvedValue(existing),
-    });
-    const usecase = new CreatePermissionUseCase(repo);
+  it('should create role with permissions successfully', async () => {
+    // Mock con `as any` para evitar error de tipos (permissions no existe en Role)
+    const mockRole = {
+      id: '1',
+      name: 'Admin',
+      description: 'Full access',
+      permissions: [
+        { permissionId: 'p1', roleId: '1' },
+        { permissionId: 'p2', roleId: '1' },
+      ],
+    } as any;
 
-    await expect(usecase.execute({ action: 'read', resource: 'document' })).rejects.toThrow('Permission already exists');
-    expect(repo.findByActionResource).toHaveBeenCalledWith('read', 'document');
+    mockRoleRepo.createWithPermissions.mockResolvedValueOnce(mockRole);
+
+    const result = await useCase.execute({
+      name: 'Admin',
+      description: 'Full access',
+      permissionIds: ['p1', 'p2'],
+    });
+
+    expect(result.name).toBe('Admin');
+    expect(mockRoleRepo.createWithPermissions).toHaveBeenCalledTimes(1);
+    expect(mockRoleRepo.createWithPermissions).toHaveBeenCalledWith(
+      'Admin',
+      'Full access',
+      ['p1', 'p2'],
+    );
+  });
+
+  it('should rollback if repository throws error', async () => {
+    mockRoleRepo.createWithPermissions.mockRejectedValueOnce(
+      new Error('Simulated DB error'),
+    );
+
+    await expect(
+      useCase.execute({
+        name: 'BrokenRole',
+        description: 'This should fail',
+        permissionIds: ['p1', 'p2'],
+      }),
+    ).rejects.toThrow('Simulated DB error');
+
+    expect(mockRoleRepo.createWithPermissions).toHaveBeenCalledTimes(1);
   });
 });
-
