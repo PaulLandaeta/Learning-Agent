@@ -52,23 +52,43 @@ describe('EnvConfigAdapter', () => {
     });
   });
 
-  describe('getJwtSecret', () => {
-    it('should return JWT secret from config service', () => {
-      const secret = 'super-secret-key';
+  describe('getJwtAccessSecret', () => {
+    it('should return JWT access secret from config service', () => {
+      const secret = 'super-secret-access-key';
       configService.getOrThrow.mockReturnValue(secret);
 
-      const result = adapter.getJwtSecret();
+      const result = adapter.getJwtAccessSecret();
 
-      expect(configService.getOrThrow).toHaveBeenCalledWith('JWT_SECRET');
+      expect(configService.getOrThrow).toHaveBeenCalledWith('JWT_ACCESS_SECRET');
       expect(result).toBe(secret);
     });
 
-    it('should throw error when JWT secret is not configured', () => {
+    it('should throw error when JWT access secret is not configured', () => {
       configService.getOrThrow.mockImplementation(() => {
-        throw new Error('JWT_SECRET is required');
+        throw new Error('JWT_ACCESS_SECRET is required');
       });
 
-      expect(() => adapter.getJwtSecret()).toThrow('JWT_SECRET is required');
+      expect(() => adapter.getJwtAccessSecret()).toThrow('JWT_ACCESS_SECRET is required');
+    });
+  });
+
+  describe('getJwtRefreshSecret', () => {
+    it('should return JWT refresh secret from config service', () => {
+      const secret = 'super-secret-refresh-key';
+      configService.getOrThrow.mockReturnValue(secret);
+
+      const result = adapter.getJwtRefreshSecret();
+
+      expect(configService.getOrThrow).toHaveBeenCalledWith('JWT_REFRESH_SECRET');
+      expect(result).toBe(secret);
+    });
+
+    it('should throw error when JWT refresh secret is not configured', () => {
+      configService.getOrThrow.mockImplementation(() => {
+        throw new Error('JWT_REFRESH_SECRET is required');
+      });
+
+      expect(() => adapter.getJwtRefreshSecret()).toThrow('JWT_REFRESH_SECRET is required');
     });
   });
 });
