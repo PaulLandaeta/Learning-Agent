@@ -1,8 +1,8 @@
 import { Input, Button, Typography } from 'antd';
 import { SendOutlined, RightOutlined, MessageOutlined } from '@ant-design/icons';
-import { TypingIndicator } from './openQuestion/TypingIndicator';
-import { ChatMessage } from './openQuestion/ChatMessage';
-import { useOpenQuestion } from '../../hooks/useOpenQuestion';
+import { TypingIndicator } from '../openQuestion/TypingIndicator';
+import { ChatMessage } from '../openQuestion/ChatMessage';
+import { useOpenQuestion } from '../../../hooks/useOpenQuestion';
 const { Text } = Typography;
 
 const WIDTH = 900;
