@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PrismaModule } from '../../core/prisma/prisma.module';
-import { ROLE_REPO, PERM_REPO } from './tokens';
+import { ROLE_REPO, PERM_REPO, AUTHZ_PORT } from './tokens';
 import { RolePrismaRepository } from './infrastructure/persistence/role.prisma.repository';
 import { PermissionPrismaRepository } from './infrastructure/persistence/permission.prisma.repository';
 import { CreateRoleUseCase } from './application/commands/create-role.usecase';
@@ -12,13 +12,19 @@ import { RbacController } from './infrastructure/http/rbac.controller';
 import { GetRolesForUserUseCase } from './application/queries/get-roles-for-user.usecase';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { IdentityModule } from '../identity/identity.module';
+import { AUTHZ_PORT as IDENTITY_AUTHZ_PORT } from '../identity/tokens';
 
 @Module({
-  imports: [PrismaModule, IdentityModule],
+  imports: [PrismaModule, forwardRef(() => IdentityModule)],
   controllers: [RbacController],
   providers: [
     { provide: ROLE_REPO, useClass: RolePrismaRepository },
     { provide: PERM_REPO, useClass: PermissionPrismaRepository },
+    {
+      provide: AUTHZ_PORT,
+      useFactory: (identityAuthz) => identityAuthz,
+      inject: [IDENTITY_AUTHZ_PORT],
+    },
     JwtAuthGuard,
     CreateRoleUseCase,
     CreatePermissionUseCase,
@@ -29,4 +35,4 @@ import { IdentityModule } from '../identity/identity.module';
   ],
   exports: [GetRolesForUserUseCase, ROLE_REPO],
 })
-export class RbacModule {}
+export class RbacModule { }

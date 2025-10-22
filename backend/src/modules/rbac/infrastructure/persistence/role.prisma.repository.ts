@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../core/prisma/prisma.service';
 import { RoleRepositoryPort } from '../../domain/ports/role.repository.port';
 import { Role } from '../../domain/entities/role.entity';
+import { Permission } from '../../domain/entities/permission.entity';
 import {
   RoleNotFoundError,
   PermissionNotFoundError,
@@ -11,7 +12,6 @@ import {
 @Injectable()
 export class RolePrismaRepository implements RoleRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
-
   async listForUser(userId: string): Promise<Role[]> {
     const roles = await this.prisma.role.findMany({
       where: { users: { some: { userId } } },
@@ -121,5 +121,24 @@ export class RolePrismaRepository implements RoleRepositoryPort {
         `Fallo al asociar permiso: ${err.message}`,
       );
     }
+  }
+
+  async getPermissionsForUser(userId: string): Promise<Permission[]> {
+    const permissions = await this.prisma.permission.findMany({
+      where: {
+        roles: {
+          some: {
+            role: {
+              users: {
+                some: { userId: userId }
+              }
+            }
+          }
+        }
+      },
+      distinct: ['id']
+    });
+
+    return permissions.map(p => new Permission(p.id, p.action, p.resource, p.description));
   }
 }

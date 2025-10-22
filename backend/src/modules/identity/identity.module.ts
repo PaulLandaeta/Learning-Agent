@@ -35,23 +35,24 @@ import { TokenExpirationService } from './domain/services/token-expiration.servi
     RequestInfoService,
     { provide: USER_REPO, useClass: UserPrismaRepository },
     { provide: SESSION_REPO, useClass: SessionPrismaRepository },
-    
+
     { provide: HASHER, useClass: BcryptHasher },
-    
+
     { provide: TOKEN_SERVICE, useClass: JwtTokenService },
-    
+
     TokenExpirationService,
     { provide: TOKEN_EXPIRATION_SERVICE, useClass: TokenExpirationService },
-    
+
     RbacAuthzAdapter,
     { provide: AUTHZ_PORT, useClass: RbacAuthzAdapter },
   ],
   exports: [
-    TOKEN_SERVICE, 
-    USER_REPO, 
+    TOKEN_SERVICE,
+    USER_REPO,
     HASHER,
     TOKEN_EXPIRATION_SERVICE,
     TokenExpirationService,
+    AUTHZ_PORT,
   ],
 })
-export class IdentityModule {}
+export class IdentityModule { }
