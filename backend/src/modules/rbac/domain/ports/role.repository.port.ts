@@ -6,4 +6,6 @@ export interface RoleRepositoryPort {
   list(): Promise<Role[]>;
   attachPermission(roleId: string, permissionId: string): Promise<void>;
   listForUser(userId: string): Promise<Role[]>;
+  delete(id: string): Promise<void>;
+  detachPermission(roleId: string, permissionId: string): Promise<void>;
 }

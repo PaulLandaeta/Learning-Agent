@@ -35,4 +35,17 @@ export class RolePrismaRepository implements RoleRepositoryPort {
       update: {},
     });
   }
+  async detachPermission(roleId: string, permissionId: string): Promise<void> {
+    await this.prisma.rolePermission.deleteMany({
+      where: {
+        roleId,
+        permissionId,
+      },
+    });
+  }
+  async delete(id: string): Promise<void> {
+    await this.prisma.role.delete({
+      where: { id },
+    });
+  }
 }

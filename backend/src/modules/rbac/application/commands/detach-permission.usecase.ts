@@ -5,7 +5,7 @@ import type { PermissionRepositoryPort } from '../../domain/ports/permission.rep
 import type { AuditRepositoryPort } from '../../domain/ports/audit.repository.port';
 
 @Injectable()
-export class AttachPermissionUseCase {
+export class DetachPermissionUseCase {
   constructor(
     @Inject(ROLE_REPO) private readonly roleRepo: RoleRepositoryPort,
     @Inject(PERM_REPO) private readonly permRepo: PermissionRepositoryPort,
@@ -21,18 +21,20 @@ export class AttachPermissionUseCase {
     if (!role) throw new Error('Role not found');
     if (!perm) throw new Error('Permission not found');
 
-    await this.roleRepo.attachPermission(input.roleId, input.permissionId);
+    await this.roleRepo.detachPermission(input.roleId, input.permissionId);
 
     await this.auditRepo.logAuditEntry({
       actorId: input.actorId,
       timestamp: new Date(),
-      action: 'ATTACH_PERMISSION',
+      action: 'DETACH_PERMISSION',
       roleId: role.id,
-      before: { roleId: role.id, permissionAttached: false },
-      after: { roleId: role.id, permissionAttached: true, permissionId: perm.id },
-      reason: `Attached permission ${perm.id}`,
+      before: { ...role },
+      after: {
+        ...role,
+        permissions: (role.permissions ?? []).filter((p) => p.id !== perm.id),
+      },
+      reason: `Detached permission ${perm.id}`,
     });
-
 
     return { ok: true };
   }
