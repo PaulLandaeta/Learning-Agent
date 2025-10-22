@@ -23,6 +23,12 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "jest"]
   },
-  "include": ["src", "prisma", "test", "**/*.spec.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src", "prisma"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

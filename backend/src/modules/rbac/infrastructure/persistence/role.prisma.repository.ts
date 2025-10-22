@@ -1,8 +1,12 @@
-// path: rbac/infrastructure/persistence/role.prisma.repository.ts
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../core/prisma/prisma.service';
 import { RoleRepositoryPort } from '../../domain/ports/role.repository.port';
 import { Role } from '../../domain/entities/role.entity';
+import {
+  RoleNotFoundError,
+  PermissionNotFoundError,
+  RoleTransactionError,
+} from '../../domain/errors/role.errors';
 
 @Injectable()
 export class RolePrismaRepository implements RoleRepositoryPort {
@@ -10,7 +14,7 @@ export class RolePrismaRepository implements RoleRepositoryPort {
 
   async listForUser(userId: string): Promise<Role[]> {
     const roles = await this.prisma.role.findMany({
-      where: { users: { some: { userId: userId } } },
+      where: { users: { some: { userId } } },
     });
     return roles.map((r) => new Role(r.id, r.name, r.description));
   }
@@ -26,8 +30,15 @@ export class RolePrismaRepository implements RoleRepositoryPort {
   }
 
   async create(name: string, description?: string | null) {
-    const r = await this.prisma.role.create({ data: { name, description } });
-    return new Role(r.id, r.name, r.description);
+    try {
+      const r = await this.prisma.role.create({ data: { name, description } });
+      return new Role(r.id, r.name, r.description);
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new RoleTransactionError(`El rol "${name}" ya existe.`);
+      }
+      throw new RoleTransactionError(err.message);
+    }
   }
 
   async list() {
@@ -36,9 +47,9 @@ export class RolePrismaRepository implements RoleRepositoryPort {
   }
 
   /**
-   * Create role and attach multiple permissions atomically.
-   * Uses prisma.$transaction with callback form so all queries share same tx client.
-   * If any operation throws, Prisma will rollback automatically.
+   * Crea un rol y asocia múltiples permisos de forma atómica.
+   * Utiliza prisma.$transaction con la forma de callback para que todas las consultas compartan el mismo cliente de transacción.
+   * Si alguna operación falla, Prisma realizará automáticamente el rollback.
    */
   async createWithPermissions(
     name: string,
@@ -51,9 +62,7 @@ export class RolePrismaRepository implements RoleRepositoryPort {
           data: { name, description },
         });
 
-        
-        if (permissionIds && permissionIds.length > 0) {
-         
+        if (permissionIds?.length > 0) {
           const foundPermissions = await tx.permission.findMany({
             where: { id: { in: permissionIds } },
             select: { id: true },
@@ -61,63 +70,55 @@ export class RolePrismaRepository implements RoleRepositoryPort {
 
           const foundIds = foundPermissions.map((p) => p.id);
           const missing = permissionIds.filter((id) => !foundIds.includes(id));
+
           if (missing.length > 0) {
-            throw new Error(`Permissions not found: ${missing.join(', ')}`);
+            throw new PermissionNotFoundError(missing);
           }
 
-          const items = permissionIds.map((pid) => ({
-            roleId: createdRole.id,
-            permissionId: pid,
-          }));
-
-         
           await tx.rolePermission.createMany({
-            data: items,
+            data: permissionIds.map((pid) => ({
+              roleId: createdRole.id,
+              permissionId: pid,
+            })),
             skipDuplicates: true,
           });
         }
 
-        
         return createdRole;
       });
 
       return new Role(role.id, role.name, role.description);
-    } catch (err) {
-      
-      throw new Error(
-        `createWithPermissions failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
+    } catch (err: any) {
+      if (err instanceof PermissionNotFoundError) throw err;
+      throw new RoleTransactionError(err.message);
     }
   }
 
   /**
-   * Attach a single permission to a role with validation inside a transaction.
-   * Even if it's a single write, we check consistency (role+permission exist) and upsert inside tx.
+   * Asocia un solo permiso a un rol con validación dentro de una transacción.
+   * Aunque sea una sola escritura, se verifica la consistencia (que el rol y el permiso existan) 
+   * y se realiza un upsert dentro de la transacción.
    */
   async attachPermission(roleId: string, permissionId: string) {
     try {
       await this.prisma.$transaction(async (tx) => {
-        
-        const role = await tx.role.findUnique({ where: { id: roleId }, select: { id: true } });
-        if (!role) throw new Error(`Role ${roleId} not found`);
+        const role = await tx.role.findUnique({ where: { id: roleId } });
+        if (!role) throw new RoleNotFoundError(roleId);
 
-    
-        const perm = await tx.permission.findUnique({
-          where: { id: permissionId },
-          select: { id: true },
-        });
-        if (!perm) throw new Error(`Permission ${permissionId} not found`);
+        const perm = await tx.permission.findUnique({ where: { id: permissionId } });
+        if (!perm) throw new PermissionNotFoundError([permissionId]);
 
-       
         await tx.rolePermission.upsert({
           where: { roleId_permissionId: { roleId, permissionId } },
           create: { roleId, permissionId },
-          update: {}, 
+          update: {},
         });
       });
-    } catch (err) {
-      throw new Error(
-        `attachPermission failed for role ${roleId} and permission ${permissionId}: ${err instanceof Error ? err.message : String(err)}`,
+    } catch (err: any) {
+      if (err instanceof RoleNotFoundError || err instanceof PermissionNotFoundError)
+        throw err;
+      throw new RoleTransactionError(
+        `Fallo al asociar permiso: ${err.message}`,
       );
     }
   }

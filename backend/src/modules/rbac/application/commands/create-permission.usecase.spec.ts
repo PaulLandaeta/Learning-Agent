@@ -23,7 +23,6 @@ describe('CreateRoleUseCase (transaction test)', () => {
   });
 
   it('should create role with permissions successfully', async () => {
-    // Mock con `as any` para evitar error de tipos (permissions no existe en Role)
     const mockRole = {
       id: '1',
       name: 'Admin',

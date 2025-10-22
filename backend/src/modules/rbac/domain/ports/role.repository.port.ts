@@ -8,7 +8,7 @@ export interface RoleRepositoryPort {
   list(): Promise<Role[]>;
   attachPermission(roleId: string, permissionId: string): Promise<void>;
 
-  // Agregar este método nuevo para soportar transacciones
+  // Método para soportar transacciones
   createWithPermissions(
     name: string,
     description: string | null,
