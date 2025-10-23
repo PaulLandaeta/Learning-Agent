@@ -10,6 +10,12 @@ describe('CreateRoleUseCase (transaction test)', () => {
   beforeEach(async () => {
     mockRoleRepo = {
       createWithPermissions: jest.fn(),
+      findByName: jest.fn(),
+      findById: jest.fn(),
+      listForUser: jest.fn(),
+      create: jest.fn(),
+      list: jest.fn(),
+      attachPermission: jest.fn(),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -33,6 +39,7 @@ describe('CreateRoleUseCase (transaction test)', () => {
       ],
     } as any;
 
+    mockRoleRepo.findByName.mockResolvedValueOnce(null); // Role doesn't exist
     mockRoleRepo.createWithPermissions.mockResolvedValueOnce(mockRole);
 
     const result = await useCase.execute({
@@ -51,6 +58,7 @@ describe('CreateRoleUseCase (transaction test)', () => {
   });
 
   it('should rollback if repository throws error', async () => {
+    mockRoleRepo.findByName.mockResolvedValueOnce(null); // Role doesn't exist
     mockRoleRepo.createWithPermissions.mockRejectedValueOnce(
       new Error('Simulated DB error'),
     );
