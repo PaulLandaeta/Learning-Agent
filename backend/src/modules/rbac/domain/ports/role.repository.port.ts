@@ -1,4 +1,5 @@
 import { Role } from '../entities/role.entity';
+import { Permission } from '../entities/permission.entity';
 
 export interface RoleRepositoryPort {
   listForUser(userId: string): Promise<Role[]>;
@@ -7,6 +8,7 @@ export interface RoleRepositoryPort {
   create(name: string, description?: string | null): Promise<Role>;
   list(): Promise<Role[]>;
   attachPermission(roleId: string, permissionId: string): Promise<void>;
+  getPermissionsForUser(userId: string): Promise<Permission[]>;
 
   // Método para soportar transacciones
   createWithPermissions(

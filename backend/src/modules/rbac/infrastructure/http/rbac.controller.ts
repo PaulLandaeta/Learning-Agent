@@ -1,5 +1,4 @@
-
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, Request } from '@nestjs/common';
 import { CreateRoleUseCase } from '../../application/commands/create-role.usecase';
 import { CreatePermissionUseCase } from '../../application/commands/create-permission.usecase';
 import { AttachPermissionUseCase } from '../../application/commands/attach-permission.usecase';
@@ -18,24 +17,28 @@ export class RbacController {
     private readonly attachPerm: AttachPermissionUseCase,
     private readonly listRoles: ListRolesUseCase,
     private readonly listPerms: ListPermissionsUseCase,
-  ) {}
+  ) { }
 
   @Post('roles')
-  createRoleEndpoint(@Body() dto: CreateRoleDto) {
-    return this.createRole.execute(dto);
+  createRoleEndpoint(@Body() dto: CreateRoleDto, @Request() req: any) {
+    const userId = req.user?.sub;
+    return this.createRole.execute({ ...dto, userId });
   }
 
   @Post('permissions')
-  createPermEndpoint(@Body() dto: CreatePermissionDto) {
-    return this.createPerm.execute(dto);
+  createPermEndpoint(@Body() dto: CreatePermissionDto, @Request() req: any) {
+    const userId = req.user?.sub;
+    return this.createPerm.execute({ ...dto, userId });
   }
 
   @Post('roles/:roleId/permissions/:permissionId')
   attachPermission(
     @Param('roleId') roleId: string,
     @Param('permissionId') permissionId: string,
+    @Request() req: any,
   ) {
-    return this.attachPerm.execute({ roleId, permissionId });
+    const userId = req.user?.sub;
+    return this.attachPerm.execute({ roleId, permissionId, userId });
   }
 
   @Get('roles')
