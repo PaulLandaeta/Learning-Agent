@@ -4,7 +4,7 @@ import { Button, theme } from "antd";
 import PageTemplate from "../../../components/PageTemplate";
 import InterviewModal from "../../../components/interview/InterviewModal";
 import InterviewSummaryModal from "../../../components/interview/InterviewFeedbackModal";
-import OpenQuestion from "../../../components/interview/OpenQuestion";
+import OpenQuestion from "../../../components/interview/openQuestion/OpenQuestion";
 import TeoricQuestion from "../../../components/interview/TeoricQuestion";
 import MultipleQuestion from "../../../components/interview/MultipleQuestion";
 import useInterview from "../../../hooks/useInterview";
