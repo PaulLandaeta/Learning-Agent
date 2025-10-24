@@ -8,6 +8,8 @@ export interface RoleRepositoryPort {
   create(name: string, description?: string | null): Promise<Role>;
   list(): Promise<Role[]>;
   attachPermission(roleId: string, permissionId: string): Promise<void>;
+  detachPermission(roleId: string, permissionId: string): Promise<void>;
+  delete(id: string): Promise<void>;
   getPermissionsForUser(userId: string): Promise<Permission[]>;
 
   // Método para soportar transacciones
