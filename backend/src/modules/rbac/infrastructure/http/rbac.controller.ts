@@ -54,13 +54,16 @@ attachPermission(
   detachPermission(
     @Param('roleId') roleId: string,
     @Param('permissionId') permissionId: string,
+    @Req() req: Request,
   ) {
-    return this.detachPerm.execute({ roleId, permissionId, actorId: 'system' });
+    const actorId = (req.user as any)?.sub;
+    return this.detachPerm.execute({ roleId, permissionId, actorId });
   }
 
   @Delete('roles/:roleId')
-  deleteRoleEndpoint(@Param('roleId') roleId: string) {
-    return this.deleteRole.execute({ roleId, actorId: 'system' });
+  deleteRoleEndpoint(@Param('roleId') roleId: string, @Req() req: Request) {
+    const actorId = (req.user as any)?.sub;
+    return this.deleteRole.execute({ roleId, actorId });
   }
 
   @Get('roles')
