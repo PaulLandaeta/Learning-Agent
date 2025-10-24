@@ -1,6 +1,15 @@
+import crypto from 'crypto';
 import { DocumentChunk } from '../entities/document-chunk.entity';
 
 export class DocumentChunkService {
+  /**
+   * Generates a SHA256 hash for the chunk content.
+   * Used to detect duplicates (idempotency).
+   */
+  static getContentHash(content: string): string {
+    return crypto.createHash('sha256').update(content.trim()).digest('hex');
+  }
+
   /**
    * Check if the chunk contains valid content.
    */
@@ -23,7 +32,7 @@ export class DocumentChunkService {
   }
 
   /**
-   * Creates a new chunk with validations.
+   * Creates a new chunk with validations and deduplication hash.
    */
   static create(
     id: string,
@@ -35,13 +44,18 @@ export class DocumentChunkService {
     createdAt?: Date,
     updatedAt?: Date,
   ): DocumentChunk {
+    this.validateContent(content);
+    this.validateChunkIndex(chunkIndex);
+
+    const hash = this.getContentHash(content);
+
     const chunk = new DocumentChunk(
       id,
       documentId,
       content,
       chunkIndex,
       type,
-      metadata,
+      { ...metadata, hash }, 
       createdAt || new Date(),
       updatedAt || new Date(),
     );
@@ -71,5 +85,14 @@ export class DocumentChunkService {
     if (chunkIndex < 0) {
       throw new Error('Chunk index must be >= 0');
     }
+  }
+
+  /**
+   * Checks if two chunks are duplicates based on their hash.
+   */
+  static isDuplicate(a: DocumentChunk, b: DocumentChunk): boolean {
+    const hashA = a.metadata?.hash;
+    const hashB = b.metadata?.hash;
+    return !!hashA && !!hashB && hashA === hashB;
   }
 }
