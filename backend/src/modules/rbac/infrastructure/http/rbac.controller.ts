@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, Delete, Query, UseGuards, } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Delete,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { CreateRoleUseCase } from '../../application/commands/create-role.usecase';
 import { CreatePermissionUseCase } from '../../application/commands/create-permission.usecase';
 import { AttachPermissionUseCase } from '../../application/commands/attach-permission.usecase';
@@ -10,7 +20,6 @@ import { GetAuditEntriesUseCase } from '../../application/queries/get-audit-entr
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { CreatePermissionDto } from './dtos/create-permission.dto';
 import { JwtAuthGuard } from 'src/shared/guards/jwt-auth.guard';
-import { Req } from '@nestjs/common';
 import type { Request } from 'express';
 
 @UseGuards(JwtAuthGuard)
@@ -33,22 +42,21 @@ export class RbacController {
     return this.createRole.execute({ ...dto, actorId });
   }
 
-
   @Post('permissions')
-  createPermEndpoint(@Body() dto: CreatePermissionDto) {
-    return this.createPerm.execute(dto);
+  createPermEndpoint(@Body() dto: CreatePermissionDto, @Req() req: Request) {
+    const actorId = (req.user as any)?.sub;
+    return this.createPerm.execute({ ...dto, actorId });
   }
 
- @Post('roles/:roleId/permissions/:permissionId')
-attachPermission(
-  @Param('roleId') roleId: string,
-  @Param('permissionId') permissionId: string,
-  @Req() req: Request,
-) {
-  const actorId = (req.user as any)?.sub;
-  return this.attachPerm.execute({ roleId, permissionId, actorId });
-}
-
+  @Post('roles/:roleId/permissions/:permissionId')
+  attachPermission(
+    @Param('roleId') roleId: string,
+    @Param('permissionId') permissionId: string,
+    @Req() req: Request,
+  ) {
+    const actorId = (req.user as any)?.sub;
+    return this.attachPerm.execute({ roleId, permissionId, actorId });
+  }
 
   @Delete('roles/:roleId/permissions/:permissionId')
   detachPermission(

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../core/prisma/prisma.service';
 import { RoleRepositoryPort } from '../../domain/ports/role.repository.port';
 import { Role } from '../../domain/entities/role.entity';
+import { Permission } from '../../domain/entities/permission.entity';
 import {
   RoleNotFoundError,
   PermissionNotFoundError,
@@ -19,17 +20,17 @@ export class RolePrismaRepository implements RoleRepositoryPort {
     return roles.map((r) => new Role(r.id, r.name, r.description));
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<Role | null> {
     const r = await this.prisma.role.findUnique({ where: { id } });
     return r ? new Role(r.id, r.name, r.description) : null;
   }
 
-  async findByName(name: string) {
+  async findByName(name: string): Promise<Role | null> {
     const r = await this.prisma.role.findUnique({ where: { name } });
     return r ? new Role(r.id, r.name, r.description) : null;
   }
 
-  async create(name: string, description?: string | null) {
+  async create(name: string, description?: string | null): Promise<Role> {
     try {
       const r = await this.prisma.role.create({ data: { name, description } });
       return new Role(r.id, r.name, r.description);
@@ -41,21 +42,16 @@ export class RolePrismaRepository implements RoleRepositoryPort {
     }
   }
 
-  async list() {
+  async list(): Promise<Role[]> {
     const rows = await this.prisma.role.findMany({ orderBy: { name: 'asc' } });
     return rows.map((r) => new Role(r.id, r.name, r.description));
   }
 
-  /**
-   * Crea un rol y asocia múltiples permisos de forma atómica.
-   * Utiliza prisma.$transaction con la forma de callback para que todas las consultas compartan el mismo cliente de transacción.
-   * Si alguna operación falla, Prisma realizará automáticamente el rollback.
-   */
   async createWithPermissions(
     name: string,
     description: string | null,
     permissionIds: string[],
-  ) {
+  ): Promise<Role> {
     try {
       const role = await this.prisma.$transaction(async (tx) => {
         const createdRole = await tx.role.create({
@@ -94,12 +90,7 @@ export class RolePrismaRepository implements RoleRepositoryPort {
     }
   }
 
-  /**
-   * Asocia un solo permiso a un rol con validación dentro de una transacción.
-   * Aunque sea una sola escritura, se verifica la consistencia (que el rol y el permiso existan) 
-   * y se realiza un upsert dentro de la transacción.
-   */
-  async attachPermission(roleId: string, permissionId: string) {
+  async attachPermission(roleId: string, permissionId: string): Promise<void> {
     try {
       await this.prisma.$transaction(async (tx) => {
         const role = await tx.role.findUnique({ where: { id: roleId } });
@@ -117,22 +108,38 @@ export class RolePrismaRepository implements RoleRepositoryPort {
     } catch (err: any) {
       if (err instanceof RoleNotFoundError || err instanceof PermissionNotFoundError)
         throw err;
-      throw new RoleTransactionError(
-        `Fallo al asociar permiso: ${err.message}`,
-      );
+      throw new RoleTransactionError(`Fallo al asociar permiso: ${err.message}`);
     }
   }
+
   async detachPermission(roleId: string, permissionId: string): Promise<void> {
     await this.prisma.rolePermission.deleteMany({
-      where: {
-        roleId,
-        permissionId,
-      },
+      where: { roleId, permissionId },
     });
   }
+
   async delete(id: string): Promise<void> {
-    await this.prisma.role.delete({
-      where: { id },
+    await this.prisma.role.delete({ where: { id } });
+  }
+
+  async getPermissionsForUser(userId: string): Promise<Permission[]> {
+    const permissions = await this.prisma.permission.findMany({
+      where: {
+        roles: {
+          some: {
+            role: {
+              users: {
+                some: { userId },
+              },
+            },
+          },
+        },
+      },
+      distinct: ['id'],
     });
+
+    return permissions.map(
+      (p) => new Permission(p.id, p.action, p.resource, p.description),
+    );
   }
 }
