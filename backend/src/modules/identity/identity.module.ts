@@ -38,14 +38,14 @@ import { EnvConfigAdapter } from './infrastructure/config/env-config.adapter';
     RequestInfoService,
     { provide: USER_REPO, useClass: UserPrismaRepository },
     { provide: SESSION_REPO, useClass: SessionPrismaRepository },
-    
+
     { provide: HASHER, useClass: BcryptHasher },
-    
+
     { provide: TOKEN_SERVICE, useClass: JwtTokenService },
-    
+
     TokenExpirationService,
     { provide: TOKEN_EXPIRATION_SERVICE, useClass: TokenExpirationService },
-    
+
     RbacAuthzAdapter,
     { provide: AUTHZ_PORT, useClass: RbacAuthzAdapter },
     
@@ -53,11 +53,12 @@ import { EnvConfigAdapter } from './infrastructure/config/env-config.adapter';
     { provide: CONFIG_PORT, useClass: EnvConfigAdapter },
   ],
   exports: [
-    TOKEN_SERVICE, 
-    USER_REPO, 
+    TOKEN_SERVICE,
+    USER_REPO,
     HASHER,
     TOKEN_EXPIRATION_SERVICE,
     TokenExpirationService,
+    AUTHZ_PORT,
   ],
 })
-export class IdentityModule {}
+export class IdentityModule { }

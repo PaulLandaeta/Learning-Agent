@@ -687,3 +687,14 @@ model ChatHistory {
   @@index([docId, question])
   @@map("chat_history")
 }
+
+model RbacAudit {
+  id        String   @id @default(uuid())
+  actorId   String
+  roleId    String
+  action    String
+  timestamp DateTime @default(now())
+  before    Json?
+  after     Json?
+  reason    String?
+}
