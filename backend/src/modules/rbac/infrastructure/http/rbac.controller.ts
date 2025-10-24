@@ -44,8 +44,8 @@ export class RbacController {
 
   @Post('permissions')
   createPermEndpoint(@Body() dto: CreatePermissionDto, @Req() req: Request) {
-    const actorId = (req.user as any)?.sub;
-    return this.createPerm.execute({ ...dto, actorId });
+    const userId = (req.user as any)?.sub;
+    return this.createPerm.execute({ ...dto, userId });
   }
 
   @Post('roles/:roleId/permissions/:permissionId')

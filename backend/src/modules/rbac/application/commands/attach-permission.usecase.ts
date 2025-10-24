@@ -1,3 +1,11 @@
+import { Injectable, Inject } from '@nestjs/common';
+import { ROLE_REPO, PERM_REPO } from '../../tokens';
+import { AUTHZ_PORT } from '../../../identity/tokens';
+import type { RoleRepositoryPort } from '../../domain/ports/role.repository.port';
+import type { PermissionRepositoryPort } from '../../domain/ports/permission.repository.port';
+import type { AuditRepositoryPort } from '../../domain/ports/audit.repository.port';
+import type { AuthorizationPort } from '../../../identity/domain/ports/authorization.port';
+
 @Injectable()
 export class AttachPermissionUseCase {
   constructor(
