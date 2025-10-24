@@ -1,36 +1,189 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:20-alpine'
+            args '-v /var/run/docker.sock:/var/run/docker.sock -v $HOME/.npm:/root/.npm'
+        }
+    }
 
     environment {
         CI = 'true'
         NODE_ENV = 'production'
         REGISTRY_CREDENTIALS = credentials('DOCKERHUB_CREDENTIALS')
+        DISCORD_WEBHOOK = credentials('DISCORD_WEBHOOK_URL')
+        NPM_TOKEN = credentials('NPM_TOKEN')
+        DATABASE_URL = credentials('PROD_DATABASE_URL')
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        JWT_SECRET = credentials('JWT_SECRET')
+        GOOGLE_API_KEY = credentials('GOOGLE_API_KEY')
+        OLLAMA_API_URL = credentials('OLLAMA_API_URL')
+        S3_BUCKET_NAME = credentials('S3_BUCKET_NAME')
+        S3_REGION = credentials('S3_REGION')
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    triggers {
+        pollSCM('H/15 * * * *')
     }
 
     stages {
+        stage('Validate Branch') {
+            steps {
+                script {
+                    if (env.BRANCH_NAME != 'main') {
+                        error("Deployment to production is only allowed from main branch")
+                    }
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
+                script {
+                    def commitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.COMMIT_HASH = commitHash
+                }
             }
         }
-        stage('Build and Push Docker image') {
+
+        stage('Install Dependencies') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
-                    script {
-                        def image = "${DOCKERHUB_USER}/learning-agent-backend:${env.BUILD_NUMBER}"
+                dir('backend') {
+                    sh 'npm ci --production=false'
+                }
+            }
+        }
+
+        stage('Static Analysis') {
+            parallel {
+                stage('Lint') {
+                    steps {
                         dir('backend') {
-                            sh 'docker -v && docker info'
-                            sh 'echo "Directorio actual:" && pwd'
-                            sh 'echo "Contenido actual:" && ls -la'
-                            sh "docker build -t ${image} ."
+                            sh 'npm run lint'
                         }
+                    }
+                }
+                stage('Type Check') {
+                    steps {
+                        dir('backend') {
+                            sh 'tsc --noEmit'
+                        }
+                    }
+                }
+                stage('Prisma Validate') {
+                    steps {
+                        dir('backend') {
+                            sh 'npx prisma validate'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                dir('backend') {
+                    sh 'npm run test:cov'
+                }
+            }
+            post {
+                always {
+                    junit 'backend/coverage/junit.xml'
+                    publishCoverage adapters: [coberturaAdapter('backend/coverage/cobertura-coverage.xml')]
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('backend') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                dir('backend') {
+                    script {
+                        def imageTag = "${env.DOCKERHUB_USER}/learning-agent-backend:${env.COMMIT_HASH}"
+                        def latestTag = "${env.DOCKERHUB_USER}/learning-agent-backend:latest"
+                        
                         sh """
-                            echo \"$DOCKERHUB_PASS\" | docker login -u \"$DOCKERHUB_USER\" --password-stdin
-                            docker push ${image}
+                            docker build -t ${imageTag} -t ${latestTag} \
+                            --build-arg NODE_ENV=production \
+                            --build-arg NPM_TOKEN=${env.NPM_TOKEN} \
+                            --build-arg DATABASE_URL=${env.DATABASE_URL} \
+                            .
                         """
                     }
                 }
             }
+        }
+
+        stage('Publish') {
+            steps {
+                script {
+                    def imageTag = "${env.DOCKERHUB_USER}/learning-agent-backend:${env.COMMIT_HASH}"
+                    def latestTag = "${env.DOCKERHUB_USER}/learning-agent-backend:latest"
+                    
+                    withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', 
+                                                    usernameVariable: 'DOCKERHUB_USER', 
+                                                    passwordVariable: 'DOCKERHUB_PASS')]) {
+                        sh """
+                            echo \"$DOCKERHUB_PASS\" | docker login -u \"$DOCKERHUB_USER\" --password-stdin
+                            docker push ${imageTag}
+                            docker push ${latestTag}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            environment {
+                KUBECONFIG = credentials('PROD_KUBECONFIG')
+            }
+            steps {
+                script {
+                    withKubeConfig([credentialsId: 'PROD_KUBECONFIG']) {
+                        dir('infra/k8s') {
+                            sh """
+                                kubectl apply -f namespace.yaml
+                                kubectl apply -f backend-deployment.yaml
+                                kubectl rollout status deployment/backend-deployment -n learning-agent
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            discordSend description: "Build #${env.BUILD_NUMBER} - SUCCESS",
+                       link: env.BUILD_URL,
+                       result: currentBuild.currentResult,
+                       title: JOB_NAME,
+                       webhookURL: DISCORD_WEBHOOK
+        }
+        failure {
+            discordSend description: "Build #${env.BUILD_NUMBER} - FAILURE\nCheck the logs for details",
+                       link: env.BUILD_URL,
+                       result: currentBuild.currentResult,
+                       title: JOB_NAME,
+                       webhookURL: DISCORD_WEBHOOK
         }
     }
 }
