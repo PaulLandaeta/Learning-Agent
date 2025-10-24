@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { AuthController } from './infrastructure/http/auth.controller';
 import { LoginUseCase } from './application/commands/login.usecase';
@@ -11,6 +12,7 @@ import {
   TOKEN_SERVICE,
   AUTHZ_PORT,
   TOKEN_EXPIRATION_SERVICE,
+  CONFIG_PORT,
 } from './tokens';
 import { UserPrismaRepository } from './infrastructure/persistence/user.prisma.repository';
 import { SessionPrismaRepository } from './infrastructure/persistence/session.prisma.repository';
@@ -22,9 +24,10 @@ import { RbacAuthzAdapter } from './infrastructure/authz/rbac-authz.adapter';
 import { RbacModule } from '../rbac/rbac.module';
 import { RequestInfoService } from './infrastructure/request-info.service';
 import { TokenExpirationService } from './domain/services/token-expiration.service';
+import { EnvConfigAdapter } from './infrastructure/config/env-config.adapter';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => RbacModule)],
+  imports: [PrismaModule, ConfigModule, forwardRef(() => RbacModule)],
   controllers: [AuthController],
   providers: [
     LoginUseCase,
@@ -45,6 +48,9 @@ import { TokenExpirationService } from './domain/services/token-expiration.servi
 
     RbacAuthzAdapter,
     { provide: AUTHZ_PORT, useClass: RbacAuthzAdapter },
+    
+    EnvConfigAdapter,
+    { provide: CONFIG_PORT, useClass: EnvConfigAdapter },
   ],
   exports: [
     TOKEN_SERVICE,
