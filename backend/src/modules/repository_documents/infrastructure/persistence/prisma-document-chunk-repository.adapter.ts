@@ -26,6 +26,26 @@ export class PrismaDocumentChunkRepositoryAdapter
    */
   async save(chunk: DocumentChunk): Promise<DocumentChunk> {
     try {
+      if (!DocumentChunkService.isValid(chunk)) {
+  throw new Error(
+    `Invalid DocumentChunk: content cannot be empty and chunkIndex must be >= 0 (chunkId: ${chunk.id})`,
+  );
+}
+
+const existingChunk = await this.prisma.documentChunk.findFirst({
+        where: {
+          documentId: chunk.documentId,
+          content: chunk.content,
+          chunkIndex: chunk.chunkIndex,
+        },
+      });
+
+      if (existingChunk) {
+        this.logger?.warn?.(
+          `Duplicate chunk detected (docId: ${chunk.documentId}, chunkIndex: ${chunk.chunkIndex})`,
+        );
+        return this.mapToEntity(existingChunk);
+      }
       const savedChunk = await this.prisma.documentChunk.create({
         data: {
           id: chunk.id,
@@ -59,7 +79,11 @@ export class PrismaDocumentChunkRepositoryAdapter
 
     try {
       this.logger.log(`Saving ${chunks.length} chunks in transaction...`);
-
+  for (const chunk of chunks) {
+        if (!DocumentChunkService.isValid(chunk)) {
+          throw new Error(`Invalid chunk in batch: ${chunk.id}`);
+        }
+      }
       const savedChunks = await this.prisma.$transaction(
         chunks.map((chunk) =>
           this.prisma.documentChunk.create({
