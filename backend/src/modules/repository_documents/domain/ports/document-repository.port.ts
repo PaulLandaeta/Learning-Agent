@@ -154,4 +154,15 @@ export interface DocumentRepositoryPort {
     documentId: string,
     courseId: string,
   ): Promise<Document | undefined>;
+
+  /**
+   * Restore document status in case of rollback
+   * @param id ID of the document
+   * @param previousStatus Previous status to restore
+   * @returns Restored document
+   */
+  restoreStatus(
+    id: string,
+    previousStatus: DocumentStatus,
+  ): Promise<Document | undefined>;
 }

@@ -88,8 +88,15 @@ export class UploadDocumentUseCase {
       options?.classId,
     );
 
-    // Save to database
-    const savedDocument = await this.documentRepository.save(document);
+    // Save to database with rollback protection
+    let savedDocument: Document;
+    try {
+      savedDocument = await this.documentRepository.save(document);
+    } catch (error) {
+      // Rollback: Delete the file from storage if database save fails
+      await this.storageAdapter.deleteFile(storageResult.fileName, true);
+      throw new Error(`Failed to save document to database: ${error.message}`);
+    }
 
     // If we have pre-generated data, save it to avoid regeneration
     if (
