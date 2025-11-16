@@ -26,3 +26,5 @@ export const DOCUMENT_INDEX_REPOSITORY_PORT = Symbol(
 export const PROCESSING_JOB_REPOSITORY_PORT = Symbol(
   'PROCESSING_JOB_REPOSITORY_PORT',
 );
+
+export const CHUNKING_CONFIG_PORT = Symbol('ChunkingConfigPort');

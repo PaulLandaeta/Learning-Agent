@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChunkingValidationService } from './chunking-validation.service';
-import { CHUNKING_LIMITS } from '../../infrastructure/config/chunking.config';
+import { CHUNKING_CONFIG_PORT } from '../../tokens';
+import type { ChunkingConfigPort } from '../ports/chunking-config.port';
 import {
   ChunkingLimitExceededError,
   DocumentSizeExceededError,
@@ -10,10 +11,28 @@ import type { ChunkingConfig } from '../ports/chunking-strategy.port';
 
 describe('ChunkingValidationService', () => {
   let service: ChunkingValidationService;
+  let mockConfig: ChunkingConfigPort;
 
   beforeEach(async () => {
+    mockConfig = {
+      getMaxChunksPerDocument: () => 500,
+      getMaxChunkSize: () => 2000,
+      getMinChunkSize: () => 50,
+      getDefaultChunkSize: () => 1000,
+      getMaxOverlap: () => 200,
+      getDefaultOverlap: () => 100,
+      getMaxDocumentSizeBytes: () => 10 * 1024 * 1024,
+      getMaxTextLengthChars: () => 1000000,
+    };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ChunkingValidationService],
+      providers: [
+        ChunkingValidationService,
+        {
+          provide: CHUNKING_CONFIG_PORT,
+          useValue: mockConfig,
+        },
+      ],
     }).compile();
 
     service = module.get<ChunkingValidationService>(ChunkingValidationService);
@@ -30,7 +49,7 @@ describe('ChunkingValidationService', () => {
     });
 
     it('should throw DocumentSizeExceededError for oversized document', () => {
-      const oversizedDocument = CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS + 1;
+      const oversizedDocument = mockConfig.getMaxTextLengthChars() + 1;
       
       expect(() => service.validateDocumentSize(oversizedDocument)).toThrow(
         DocumentSizeExceededError,
@@ -38,7 +57,7 @@ describe('ChunkingValidationService', () => {
     });
 
     it('should include actual and max size in error', () => {
-      const oversizedDocument = CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS + 1000;
+      const oversizedDocument = mockConfig.getMaxTextLengthChars() + 1000;
       
       try {
         service.validateDocumentSize(oversizedDocument);
@@ -46,12 +65,12 @@ describe('ChunkingValidationService', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(DocumentSizeExceededError);
         expect(error.actualSize).toBe(oversizedDocument);
-        expect(error.maxSize).toBe(CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS);
+        expect(error.maxSize).toBe(mockConfig.getMaxTextLengthChars());
       }
     });
 
     it('should pass for document at exact size limit', () => {
-      const exactLimit = CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS;
+      const exactLimit = mockConfig.getMaxTextLengthChars();
       expect(() => service.validateDocumentSize(exactLimit)).not.toThrow();
     });
   });
@@ -63,7 +82,7 @@ describe('ChunkingValidationService', () => {
     });
 
     it('should throw ChunkingLimitExceededError for excessive chunks', () => {
-      const excessiveChunks = CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT + 1;
+      const excessiveChunks = mockConfig.getMaxChunksPerDocument() + 1;
       
       expect(() => service.validateChunkCount(excessiveChunks)).toThrow(
         ChunkingLimitExceededError,
@@ -71,7 +90,7 @@ describe('ChunkingValidationService', () => {
     });
 
     it('should include actual and limit in error', () => {
-      const excessiveChunks = CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT + 50;
+      const excessiveChunks = mockConfig.getMaxChunksPerDocument() + 50;
       
       try {
         service.validateChunkCount(excessiveChunks);
@@ -79,12 +98,12 @@ describe('ChunkingValidationService', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ChunkingLimitExceededError);
         expect(error.actualValue).toBe(excessiveChunks);
-        expect(error.limit).toBe(CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT);
+        expect(error.limit).toBe(mockConfig.getMaxChunksPerDocument());
       }
     });
 
     it('should pass for chunk count at exact limit', () => {
-      const exactLimit = CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT;
+      const exactLimit = mockConfig.getMaxChunksPerDocument();
       expect(() => service.validateChunkCount(exactLimit)).not.toThrow();
     });
   });
@@ -115,7 +134,7 @@ describe('ChunkingValidationService', () => {
     it('should throw for maxChunkSize exceeding limit', () => {
       const invalidConfig = {
         ...validConfig,
-        maxChunkSize: CHUNKING_LIMITS.MAX_CHUNK_SIZE + 1,
+        maxChunkSize: mockConfig.getMaxChunkSize() + 1,
       };
       
       expect(() => service.validateChunkingConfig(invalidConfig)).toThrow(
@@ -162,7 +181,7 @@ describe('ChunkingValidationService', () => {
     it('should warn but not throw for small minChunkSize', () => {
       const configWithSmallMin = {
         ...validConfig,
-        minChunkSize: CHUNKING_LIMITS.MIN_CHUNK_SIZE - 1,
+        minChunkSize: mockConfig.getMinChunkSize() - 1,
       };
       
       const result = service.validateChunkingConfig(configWithSmallMin);
@@ -173,7 +192,7 @@ describe('ChunkingValidationService', () => {
     it('should warn but not throw for large overlap', () => {
       const configWithLargeOverlap = {
         ...validConfig,
-        overlap: CHUNKING_LIMITS.MAX_OVERLAP + 1,
+        overlap: mockConfig.getMaxOverlap() + 1,
       };
       
       const result = service.validateChunkingConfig(configWithLargeOverlap);
@@ -260,7 +279,7 @@ describe('ChunkingValidationService', () => {
     });
 
     it('should throw for oversized document', () => {
-      const oversizedDoc = CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS + 1;
+      const oversizedDoc = mockConfig.getMaxTextLengthChars() + 1;
       
       expect(() =>
         service.validateBeforeChunking(oversizedDoc, validConfig),
@@ -321,7 +340,7 @@ describe('ChunkingValidationService', () => {
         respectSentences: false,
       };
       
-      const textLength = CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT * 1000;
+      const textLength = mockConfig.getMaxChunksPerDocument() * 1000;
       
       expect(() =>
         service.validateBeforeChunking(textLength, config),
@@ -353,8 +372,8 @@ describe('ChunkingValidationService', () => {
 
     it('should handle minimal valid config', () => {
       const minimalConfig: ChunkingConfig = {
-        maxChunkSize: CHUNKING_LIMITS.MIN_CHUNK_SIZE + 1,
-        minChunkSize: CHUNKING_LIMITS.MIN_CHUNK_SIZE,
+        maxChunkSize: mockConfig.getMinChunkSize() + 1,
+        minChunkSize: mockConfig.getMinChunkSize(),
         overlap: 0,
         respectParagraphs: false,
         respectSentences: false,
@@ -366,9 +385,9 @@ describe('ChunkingValidationService', () => {
 
     it('should handle maximum valid config', () => {
       const maximalConfig: ChunkingConfig = {
-        maxChunkSize: CHUNKING_LIMITS.MAX_CHUNK_SIZE,
-        minChunkSize: CHUNKING_LIMITS.MIN_CHUNK_SIZE,
-        overlap: CHUNKING_LIMITS.MAX_OVERLAP,
+        maxChunkSize: mockConfig.getMaxChunkSize(),
+        minChunkSize: mockConfig.getMinChunkSize(),
+        overlap: mockConfig.getMaxOverlap(),
         respectParagraphs: true,
         respectSentences: true,
       };
@@ -378,3 +397,4 @@ describe('ChunkingValidationService', () => {
     });
   });
 });
+

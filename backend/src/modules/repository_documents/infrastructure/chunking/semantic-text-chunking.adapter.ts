@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentChunk } from '../../domain/entities/document-chunk.entity';
 import { DocumentChunkService } from '../../domain/services/document-chunk.service';
 import { ChunkingValidationService } from '../../domain/services/chunking-validation.service';
-import { CHUNKING_LIMITS } from '../config/chunking.config';
+import { CHUNKING_CONFIG_PORT } from '../../tokens';
+import type { ChunkingConfigPort } from '../../domain/ports/chunking-config.port';
 import type {
   ChunkingStrategyPort,
   ChunkingConfig,
@@ -25,6 +26,8 @@ export class SemanticTextChunkingAdapter implements ChunkingStrategyPort {
 
   constructor(
     private readonly chunkingValidationService: ChunkingValidationService,
+    @Inject(CHUNKING_CONFIG_PORT)
+    private readonly chunkingConfig: ChunkingConfigPort,
   ) {}
 
   /**
@@ -123,11 +126,11 @@ export class SemanticTextChunkingAdapter implements ChunkingStrategyPort {
    */
   getDefaultConfig(): ChunkingConfig {
     return {
-      maxChunkSize: CHUNKING_LIMITS.DEFAULT_CHUNK_SIZE,
-      overlap: CHUNKING_LIMITS.DEFAULT_OVERLAP,
+      maxChunkSize: this.chunkingConfig.getDefaultChunkSize(),
+      overlap: this.chunkingConfig.getDefaultOverlap(),
       respectParagraphs: true,
       respectSentences: true,
-      minChunkSize: CHUNKING_LIMITS.MIN_CHUNK_SIZE,
+      minChunkSize: this.chunkingConfig.getMinChunkSize(),
     };
   }
 

@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CHUNKING_LIMITS } from '../../infrastructure/config/chunking.config';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { CHUNKING_CONFIG_PORT } from '../../tokens';
+import type { ChunkingConfigPort } from '../ports/chunking-config.port';
 import {
   ChunkingLimitExceededError,
   DocumentSizeExceededError,
@@ -18,22 +19,27 @@ export interface ChunkingValidationResult {
 export class ChunkingValidationService {
   private readonly logger = new Logger(ChunkingValidationService.name);
 
+  constructor(
+    @Inject(CHUNKING_CONFIG_PORT)
+    private readonly chunkingConfig: ChunkingConfigPort,
+  ) {}
+
   validateDocumentSize(textLength: number): void {
-    if (textLength > CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS) {
+    if (textLength > this.chunkingConfig.getMaxTextLengthChars()) {
       throw new DocumentSizeExceededError(
-        `Document text exceeds maximum allowed length of ${CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS} characters`,
+        `Document text exceeds maximum allowed length of ${this.chunkingConfig.getMaxTextLengthChars()} characters`,
         textLength,
-        CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS,
+        this.chunkingConfig.getMaxTextLengthChars(),
       );
     }
   }
 
   validateChunkCount(chunkCount: number): void {
-    if (chunkCount > CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT) {
+    if (chunkCount > this.chunkingConfig.getMaxChunksPerDocument()) {
       throw new ChunkingLimitExceededError(
-        `Document generated ${chunkCount} chunks, exceeding the maximum limit of ${CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT}`,
+        `Document generated ${chunkCount} chunks, exceeding the maximum limit of ${this.chunkingConfig.getMaxChunksPerDocument()}`,
         chunkCount,
-        CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT,
+        this.chunkingConfig.getMaxChunksPerDocument(),
       );
     }
   }
@@ -46,9 +52,9 @@ export class ChunkingValidationService {
       errors.push('maxChunkSize must be greater than 0');
     }
 
-    if (config.maxChunkSize > CHUNKING_LIMITS.MAX_CHUNK_SIZE) {
+    if (config.maxChunkSize > this.chunkingConfig.getMaxChunkSize()) {
       errors.push(
-        `maxChunkSize cannot exceed ${CHUNKING_LIMITS.MAX_CHUNK_SIZE}`,
+        `maxChunkSize cannot exceed ${this.chunkingConfig.getMaxChunkSize()}`,
       );
     }
 
@@ -56,9 +62,9 @@ export class ChunkingValidationService {
       errors.push('minChunkSize must be greater than 0');
     }
 
-    if (config.minChunkSize < CHUNKING_LIMITS.MIN_CHUNK_SIZE) {
+    if (config.minChunkSize < this.chunkingConfig.getMinChunkSize()) {
       warnings.push(
-        `minChunkSize is below recommended minimum of ${CHUNKING_LIMITS.MIN_CHUNK_SIZE}`,
+        `minChunkSize is below recommended minimum of ${this.chunkingConfig.getMinChunkSize()}`,
       );
     }
 
@@ -74,9 +80,9 @@ export class ChunkingValidationService {
       errors.push('overlap must be less than maxChunkSize');
     }
 
-    if (config.overlap > CHUNKING_LIMITS.MAX_OVERLAP) {
+    if (config.overlap > this.chunkingConfig.getMaxOverlap()) {
       warnings.push(
-        `overlap exceeds recommended maximum of ${CHUNKING_LIMITS.MAX_OVERLAP}`,
+        `overlap exceeds recommended maximum of ${this.chunkingConfig.getMaxOverlap()}`,
       );
     }
 
@@ -123,12 +129,12 @@ export class ChunkingValidationService {
 
     const estimatedChunks = this.estimateChunkCount(textLength, config);
     
-    if (estimatedChunks > CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT) {
+    if (estimatedChunks > this.chunkingConfig.getMaxChunksPerDocument()) {
       throw new ChunkingLimitExceededError(
-        `Estimated ${estimatedChunks} chunks would exceed the maximum limit of ${CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT}. ` +
+        `Estimated ${estimatedChunks} chunks would exceed the maximum limit of ${this.chunkingConfig.getMaxChunksPerDocument()}. ` +
         `Consider using a larger chunk size or processing the document in batches.`,
         estimatedChunks,
-        CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT,
+        this.chunkingConfig.getMaxChunksPerDocument(),
       );
     }
   }

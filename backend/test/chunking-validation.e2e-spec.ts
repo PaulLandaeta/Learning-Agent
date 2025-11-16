@@ -3,7 +3,7 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { PrismaService } from '../src/core/prisma/prisma.service';
 import { DocumentsModule } from '../src/modules/repository_documents/documents.module';
-import { CHUNKING_LIMITS } from '../src/modules/repository_documents/infrastructure/config/chunking.config';
+
 
 describe('Document Chunking Validation E2E', () => {
   let app: INestApplication;
@@ -25,7 +25,7 @@ describe('Document Chunking Validation E2E', () => {
 
   describe('Document size validation', () => {
     it('should reject document exceeding text length limit', async () => {
-      const oversizedText = 'x'.repeat(CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS + 1000);
+      const oversizedText = 'x'.repeat(1000000 + 1000);
       
       const response = await request(app.getHttpServer())
         .post('/api/documents/test-chunking')
@@ -43,9 +43,9 @@ describe('Document Chunking Validation E2E', () => {
     });
 
     it('should accept document at exact size limit', async () => {
-      const exactLimitText = 'x'.repeat(CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS);
+      const exactLimitText = 'x'.repeat(1000000);
       
-      expect(exactLimitText.length).toBe(CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS);
+      expect(exactLimitText.length).toBe(1000000);
     });
   });
 
@@ -76,7 +76,7 @@ describe('Document Chunking Validation E2E', () => {
       };
       
       expect(Math.ceil(text.length / (config.maxChunkSize - config.overlap))).toBeLessThan(
-        CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT,
+        500,
       );
     });
   });
@@ -88,7 +88,7 @@ describe('Document Chunking Validation E2E', () => {
         .send({
           text: 'Sample text',
           config: {
-            maxChunkSize: CHUNKING_LIMITS.MAX_CHUNK_SIZE + 1,
+            maxChunkSize: 2000 + 1,
             overlap: 100,
             minChunkSize: 50,
           },
@@ -166,7 +166,7 @@ describe('Document Chunking Validation E2E', () => {
       const chunkSize = 1000;
       const overlap = 0;
       const effectiveChunkSize = chunkSize - overlap;
-      const textLength = CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT * effectiveChunkSize;
+      const textLength = 500 * effectiveChunkSize;
       const text = 'x'.repeat(textLength);
       
       const config = {
@@ -176,7 +176,7 @@ describe('Document Chunking Validation E2E', () => {
       };
       
       const estimatedChunks = Math.ceil(textLength / effectiveChunkSize);
-      expect(estimatedChunks).toBe(CHUNKING_LIMITS.MAX_CHUNKS_PER_DOCUMENT);
+      expect(estimatedChunks).toBe(500);
     });
   });
 
@@ -193,11 +193,11 @@ describe('Document Chunking Validation E2E', () => {
         we get multiple chunks from this document.
       `.repeat(50);
       
-      expect(validText.length).toBeLessThan(CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS);
+      expect(validText.length).toBeLessThan(1000000);
     });
 
     it('should provide helpful error message for oversized documents', async () => {
-      const oversizedText = 'x'.repeat(CHUNKING_LIMITS.MAX_TEXT_LENGTH_CHARS + 1);
+      const oversizedText = 'x'.repeat(1000000 + 1);
       
       const response = await request(app.getHttpServer())
         .post('/api/documents/test-chunking')
@@ -232,3 +232,4 @@ describe('Document Chunking Validation E2E', () => {
     });
   });
 });
+
