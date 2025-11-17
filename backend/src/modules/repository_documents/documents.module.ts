@@ -18,6 +18,7 @@ import {
   DOCUMENT_INDEX_GENERATOR_PORT,
   DOCUMENT_INDEX_REPOSITORY_PORT,
   PROCESSING_JOB_REPOSITORY_PORT,
+  CHUNKING_CONFIG_PORT,
 } from './tokens';
 
 // Domain ports
@@ -42,12 +43,14 @@ import { PgVectorSearchAdapter } from './infrastructure/search/pgvector-search.a
 import { PrismaDeletedDocumentRepositoryAdapter } from './infrastructure/persistence/prisma-deleted-document-repository.adapter';
 import { GeminiIndexGeneratorAdapter } from './infrastructure/ai/gemini-index-generator.adapter';
 import { PrismaProcessingJobRepositoryAdapter } from './infrastructure/persistence/prisma-processing-job-repository.adapter';
+import { ChunkingConfigAdapter } from './infrastructure/config/chunking-config.adapter';
 
 // Domain services
 import { DocumentChunkingService } from './domain/services/document-chunking.service';
 import { DocumentEmbeddingService } from './domain/services/document-embedding.service';
 import { RetryService } from './domain/services/retry.service';
 import { DeadLetterQueueService } from './domain/services/dead-letter-queue.service';
+import { ChunkingValidationService } from './domain/services/chunking-validation.service';
 
 // Contract use cases
 import { GetDocumentsBySubjectUseCase } from './application/queries/get-documents-by-subject.usecase';
@@ -85,7 +88,9 @@ import { StorageReconciliationService } from './infrastructure/services/storage-
 
     ContextualLoggerService,
     StorageReconciliationService,
+    ChunkingValidationService,
 
+    { provide: CHUNKING_CONFIG_PORT, useClass: ChunkingConfigAdapter },
     { provide: DOCUMENT_STORAGE_PORT, useClass: S3StorageAdapter },
     {
       provide: DOCUMENT_REPOSITORY_PORT,
